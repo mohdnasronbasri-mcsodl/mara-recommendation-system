@@ -44,59 +44,200 @@ else:
 cari_button = st.sidebar.button("🔍 Cari Pelajar")
 
 # ============================================
-# KAMUS SUBJEK SPM
+# KAMUS SUBJEK SPM (DARI FILE ANDA)
 # ============================================
 SUBJECT_NAMES = {
-    'BM': 'Bahasa Melayu',
-    'BI': 'Bahasa Inggeris',
-    'SEJ': 'Sejarah',
-    'PI': 'Pendidikan Islam',
-    'PM': 'Pendidikan Moral',
-    'MAT': 'Matematik',
-    'SNS': 'Sains',
-    'KI': 'Kesusasteraan Inggeris',
-    'LUK': 'Pendidikan Seni Visual',
-    'KMK': 'Kesusasteraan Melayu',
-    'GEO': 'Geografi',
-    'BAT': 'Bahasa Arab',
-    'M-T': 'Matematik Tambahan',
-    'PT': 'Perdagangan',
-    'PGW': 'Pengajian Keusahawanan',
-    'ACC': 'Prinsip Perakaunan',
-    'LKJ': 'LKJ',
-    'PJM': 'PJM',
-    'PJA': 'PJA',
-    'PJE': 'PJE',
-    'RKC': 'RKC',
-    'PNG': 'PNG',
-    'EKO': 'Ekonomi',
-    'AKS': 'AKS',
-    'RT': 'Sains Rumah Tangga',
-    'SK': 'Sains Komputer',
-    'GKT': 'Grafik Komunikasi Teknikal',
-    'FIZ': 'Fizik',
-    'KIM': 'Kimia',
-    'BIO': 'Biologi',
-    'SNT': 'Sains Tambahan',
-    'SS': 'Sains Sukan',
-    'TSI': 'Tasawwur Islam',
-    'PQS': 'Pendidikan Al-Quran & Al-Sunnah',
-    'PSI': 'Pendidikan Syariah Islamiah',
-    'HQ': 'Hifz Al-Quran',
-    'MQ': 'Maharat Al-Quran',
-    'UAD': 'UAD',
-    'AS': 'Asas Sastera',
-    'LAM': 'Bahasa Arab Lanjutan',
-    'MUI': 'MUI',
-    'AWB': 'AWB',
-    'BC': 'Bahasa Cina',
-    'PGN': 'PGN',
-    'LDN': 'LDN',
-    'MUL': 'MUL',
-    'PRT': 'PRT',
-    'HD': 'HD',
-    'RGD': 'RGD',
-    'BK': 'BK'
+    'BM': 'BAHASA MELAYU',
+    'BI': 'BAHASA INGGERIS',
+    'PI': 'PENDIDIKAN ISLAM',
+    'PM': 'PENDIDIKAN MORAL',
+    'SEJ': 'SEJARAH',
+    'MAT': 'MATEMATIK',
+    'SN': 'SAINS',
+    'KSI': 'LITERATURE IN ENGLISH',
+    'KI': 'KESUSASTERAAN INGGERIS',
+    'KSM': 'KESUSASTERAAN MELAYU',
+    'KMK': 'KESUSASTERAAN MELAYU KOMUNIKATIF',
+    'GEO': 'GEOGRAFI',
+    'BAT': 'BAHASA ARAB / BAHASA ARAB TINGGI',
+    'LUK': 'PENDIDIKAN SENI VISUAL',
+    'MUZ': 'PENDIDIKAN MUZIK',
+    'MZK': 'MUZIK',
+    'TRI': 'TARI',
+    'TAT': 'TEATER',
+    'LS': 'LUKISAN',
+    'SPS': 'SEJARAH DAN PENGURUSAN SENI',
+    'SH2': 'SENI HALUS 2D',
+    'SH3': 'SENI HALUS 3D',
+    'RBG': 'REKA BENTUK GRAFIK',
+    'MK': 'MULTIMEDIA KREATIF',
+    'RBK': 'REKA BENTUK KRAF',
+    'RBI': 'REKA BENTUK INDUSTRI',
+    'PSP': 'PRODUKSI SENI PERSEMBAHAN',
+    'AMU': 'ALAT MUZIK UTAMA',
+    'MKO': 'MUZIK KOMPUTER',
+    'ADT': 'AURAL DAN TEORI',
+    'TR': 'TARIAN',
+    'KT': 'KAREOGRAFI TARI',
+    'AT': 'APRESIASI TARI',
+    'LN': 'LAKONAN',
+    'PS': 'PENULISAN SKRIP',
+    'SG': 'SINOGRAFI',
+    'M-T': 'MATEMATIK TAMBAHAN',
+    'SPT': 'SAINS PERTANIAN',
+    'PGO': 'PENGAJIAN AGROTEKNOLOGI',
+    'PT': 'PERTANIAN',
+    'PGW': 'PENGAJIAN KEUSAHAWANAN',
+    'PDG': 'PERDAGANGAN',
+    'PAK': 'PRINSIP PERAKAUNAN',
+    'EKA': 'EKONOMI ASAS',
+    'ERT': 'EKONOMI RUMAH TANGGA',
+    'LKJ': 'LUKISAN KEJURUTERAAN',
+    'PJM': 'PENGAJIAN KEJURUTERAAN MEKANIKAL',
+    'PJA': 'PENGAJIAN KEJURUTERAAN AWAM',
+    'PJE': 'PENGAJIAN KEJURUTERAAN ELEKTRIK DAN ELEKTRONIK',
+    'RKC': 'REKA CIPTA',
+    'TKJ': 'TEKNOLOGI KEJURUTERAAN',
+    'TEK': 'INFORMATION AND COMMUNICATION TECHNOLOGY',
+    'PNG': 'PERNIAGAAN',
+    'EKO': 'EKONOMI',
+    'AKS': 'ASAS KELESTARIAN',
+    'RT': 'SAINS RUMAH TANGGA',
+    'SK': 'SAINS KOMPUTER',
+    'GKT': 'GRAFIK KOMUNIKASI TEKNIKAL',
+    'FIZ': 'FIZIK',
+    'KIM': 'KIMIA',
+    'BIO': 'BIOLOGI',
+    'SNT': 'ADDITIONAL SCIENCE',
+    'PSS': 'PENGETAHUAN SAINS SUKAN',
+    'SS': 'SAINS SUKAN',
+    'ASN': 'APPLIED SCIENCE',
+    'TSI': 'TASAWWUR ISLAM',
+    'PQS': 'PENDIDIKAN AL-QURAN DAN AL-SUNNAH',
+    'PSI': "PENDIDIKAN SYARI'AH ISLAMIAH",
+    'HQ': 'HIFZ AL QURAN',
+    'MQ': 'MAHARAT AL QURAN',
+    'TQS': 'TURATH AL-QURAN DAN AL-SUNNAH',
+    'TDI': 'TURATH DIRASAT ISLAMIAH',
+    'TBA': 'TURATH BAHASA ARAB',
+    'UAD': 'USUL AL-DIN',
+    'AS': 'AL-SYARIAH',
+    'LAM': 'AL-LUGHAH AL-ARABIAH AL-MU\'ASIRAH',
+    'MUI': 'MANAHIJ AL-\'ULUM AL-ISLAMIAH',
+    'AWB': 'AL-ADAB WA AL-BALAGHAH',
+    'BC': 'BAHASA CINA',
+    'BT': 'BAHASA TAMIL',
+    'EST': 'ENGLISH FOR SCIENCE AND TECHNOLOGY',
+    'BIB': 'BAHASA IBAN',
+    'BS': 'BAHASA SEMAI',
+    'BAK': 'BAHASA ARAB KOMUNIKASI',
+    'PDM': 'PEMBINAAN DOMESTIK',
+    'MPR': 'MEMBUAT PERABOT',
+    'KPD': 'KERJA PAIP DOMESTIK',
+    'PND': 'PENDAWAIAN DOMESTIK',
+    'KAG': 'KIMPALAN ARKA DAN GAS',
+    'MAM': 'MENSERVIS AUTOMOBIL',
+    'MMS': 'MENSERVIS MOTOSIKAL',
+    'PPU': 'MENSERVIS PERALATAN PENYEJUKAN DAN PENYAMANAN UDARA',
+    'MPE': 'MENSERVIS PERALATAN ELEKTRIK DOMESTIK',
+    'PR': 'PEMBUATAN PERABOT',
+    'RDJ': 'REKAAN DAN JAHITAN PAKAIAN',
+    'TKP': 'KATERING DAN PENYAJIAN',
+    'PGN': 'PEMPROSESAN MAKANAN',
+    'MDR': 'PENJAGAAN MUKA DAN DANDANAN RAMBUT',
+    'PKK': 'ASUHAN DAN PENDIDIKAN AWAL KANAK-KANAK',
+    'GAG': 'GERONTOLOGI ASAS DAN PERKHIDMATAN GERIATRIK',
+    'PRM': 'PENJAGAAN MUKA DAN PENGGAYAAN RAMBUT',
+    'GDG': 'GERONTOLOGI ASAS DAN GERIATRIK',
+    'LDN': 'LANDSKAP DAN NURSERI',
+    'AHR': 'AKUAKULTUR DAN HAIWAN REKREASI',
+    'TNM': 'TANAMAN MAKANAN',
+    'SRT': 'SENI REKA TANDA',
+    'HAD': 'HIASAN DALAMAN ASAS',
+    'MUL': 'PRODUKSI MULTIMEDIA',
+    'GRA': 'GRAFIK BERKOMPUTER',
+    'PRT': 'PRODUKSI REKA TANDA',
+    'HD': 'HIASAN DALAMAN',
+    'RGD': 'REKA BENTUK GRAFIK DIGITAL',
+    'BHB': 'BAHAN BINAAN',
+    'TKB': 'TEKNOLOGI BINAAN',
+    'PEE': 'PRINSIP ELEKTRIK DAN ELEKTRONIK',
+    'AEE': 'APLIKASI ELEKTRIK DAN ELEKTRONIK',
+    'PBK': 'PEMESINAN BERKOMPUTER',
+    'ABM': 'AMALAN BENGKEL MEKANIKAL',
+    'PYJ': 'PENYEJUKAN',
+    'PYU': 'PENYAMANAN UDARA',
+    'ATK': 'AUTOMOTIF KENDERAAN',
+    'AED': 'AUTOMOTIF ELEKTRIK DAN DISEL',
+    'KRK': 'KIMPALAN ARKA',
+    'KGS': 'KIMPALAN GAS',
+    'FOP': 'FUNDAMENTALS OF PROGRAMMING',
+    'PDT': 'PROGRAMMING AND DEVELOPMENT TOOLS',
+    'MPK': 'MEMBUAT PAKAIAN',
+    'POP': 'POLA PAKAIAN',
+    'MRP': 'ROTI DAN MAKANAN YIS',
+    'PTS': 'PATISSERIE',
+    'SOL': 'PERSOLEKAN',
+    'DDR': 'DANDANAN RAMBUT',
+    'PPK': 'PENGAJIAN PERKEMBANGAN KANAK-KANAK',
+    'PKA': 'PERKHIDMATAN AWAL KANAK-KANAK',
+    'PBT': 'PENYEDIAAN MASAKAN BARAT DAN TIMUR',
+    'PMM': 'PENYAJIAN MAKANAN DAN MINUMAN',
+    'AKP': 'APLIKASI KOMPUTER DALAM PERNIAGAAN',
+    'PAP': 'PERAKAUNAN PERNIAGAAN',
+    'TPP': 'TEKNOLOGI PEJABAT PERNIAGAAN',
+    'TBM': 'TEKNOLOGI BENGKEL MESIN',
+    'KMM': 'KERJA MENGGEGAS & MELARIK',
+    'LGM': 'LUKISAN GEOMETRI & MESIN',
+    'TBB': 'TEKNOLOGI BINAAN BANGUNAN',
+    'KKB': 'KERJA KAYU & BATA',
+    'LGB': 'LUKISAN GEOMETRI & BINAAN BANGUNAN',
+    'TGR': 'TEKNOLOGI ELEKTRIK',
+    'PKE': 'PEMASANGAN & KAWALAN ELEKTRIK',
+    'LGR': 'LUKISAN GEOMETRI & ELEKTRIK',
+    'TGN': 'TEKNOLOGI ELEKTRONIK',
+    'RTV': 'MENSERVIS RADIO & TV',
+    'LGN': 'LUKISAN GEOMETRI & ELEKTRONIK',
+    'TKL': 'TEKNOLOGI KIMPALAN & FABRIKASI LOGAM',
+    'KK': 'KERJA KIMPALAN',
+    'LGF': 'LUKISAN GEOMETRI & FABRIKASI LOGAM',
+    'TGA': 'TEKNOLOGI AUTOMOTIF',
+    'SMK': 'MENSERVIS & MEMBAIKI KENDERAAN',
+    'LGA': 'LUKISAN GEOMETRI & AUTOMOTIF',
+    'TPU': 'TEKNOLOGI PENYEJUKAN & PENYAMANAN UDARA',
+    'KPU': 'KERJA PENYEJUKAN & PENYAMANAN UDARA',
+    'LGP': 'LUKISAN GEOMETRI & PENYAMANAN UDARA',
+    'AMM': 'ASAS PEMEROSESAN MAKLUMAT',
+    'TKR': 'TEKNOLOGI KATERING',
+    'PPM': 'PENYEDIAAN & PERKHIDMATAN MAKANAN',
+    'TRF': 'TEKNOLOGI REKAAN FESYEN & MEMBUAT PAKAIAN',
+    'RFP': 'REKAAN FESYEN & MEMBUAT PAKAIAN',
+    'TSK': 'TEKNOLOGI SENI KECANTIKAN',
+    'PMR': 'PERSOLEKAN & MENDANDAN RAMBUT',
+    'TBK': 'TEKNOLOGI BAKERI & KONFEKSIONERI',
+    'AKK': 'ASUHAN KANAK-KANAK',
+    'MMK': 'MENGASUH DAN MEMBIMBING KANAK-KANAK',
+    'PTM': 'PENGELUARAN TANAMAN',
+    'PTN': 'PENGELUARAN TERNAKAN',
+    'HHL': 'HORTIKULTUR HIASAN DAN LANDSKAP',
+    'JLG': 'KEJENTERAAN LADANG',
+    'LDG': 'PENGURUSAN LADANG',
+    'KSE': 'KESUSASTERAAN CINA',
+    'KST': 'KESUSASTERAAN TAMIL',
+    'BK': 'BIBLE KNOWLEDGE',
+    'BF': 'BAHASA PERANCIS',
+    'BPJ': 'BAHASA PUNJABI',
+    'KVL': 'KOMUNIKASI VISUAL',
+    'SNH': 'SENI HALUS',
+    'RKB': 'REKABENTUK',
+    'BKD': 'BAHASA KADAZAN/DUSUN',
+    'PDR': 'PELANCONGAN DAN REKREASI',
+    'AMP': 'ASAS KEMAHIRAN PELANCONGAN',
+    'JPT': 'KEJENTERAAN PERTANIAN',
+    'PHP': 'PEMPROSESAN HASIL PERTANIAN',
+    'BG': 'BAHASA JERMAN',
+    'BJ': 'BAHASA JEPUN',
+    'ZZZ': 'MATA PELAJARAN SELAIN DI ATAS'
 }
 
 # ============================================
@@ -106,20 +247,23 @@ def grade_to_numeric(grade):
     if pd.isna(grade) or grade == 'NA' or grade == '':
         return 0
     mapping = {
-        'A': 90, 'A-': 90, 'A+': 90,
-        'B': 75, 'B+': 75, 'B-': 75,
-        'C': 60, 'C+': 60, 'C-': 60,
+        'A+': 95, 'A': 90, 'A-': 85,
+        'B+': 80, 'B': 75, 'B-': 70,
+        'C+': 65, 'C': 60, 'C-': 55,
         'D': 50,
-        'E': 40
+        'E': 45,
+        'F': 40,
+        'G': 30
     }
     val = str(grade).strip().upper()
     return mapping.get(val, 0)
 
 # ============================================
-# FUNGSI CADANGAN PROGRAM (BERDASARKAN SUBJEK)
+# FUNGSI CADANGAN PROGRAM (BERDASARKAN SYARAT SEBENAR)
 # ============================================
 def recommend_programs(row):
     recommendations = []
+    reasons = []
     
     # Dapatkan gred dalam numerik
     add_math = grade_to_numeric(row.get('M-T', 0))
@@ -137,125 +281,120 @@ def recommend_programs(row):
     
     # Syarat wajib: Sejarah lulus
     if sejarah < 40:
-        return ["❌ **Tidak layak** - Sejarah gagal"]
+        return [{"cluster": "Tidak Layak", "programs": [], "reasons": ["Sejarah gagal - tidak layak ke mana-mana program"]}]
     
-    # ---------- Engineering ----------
-    if add_math >= 75 and (fizik >= 75 or kim >= 75):
+    # ---------- DIPLOMA IN ENGLISH COMMUNICATION ----------
+    # Syarat: BI ≥ B (75), BM ≥ C (60), Sejarah lulus
+    english_programs = []
+    english_reasons = []
+    if bi >= 75 and bm >= 60 and sejarah >= 40:
+        english_programs.append("Diploma in English Communication")
+        english_reasons.append(f"BI ({row.get('BI', 'N/A')}) ≥ B, BM ({row.get('BM', 'N/A')}) ≥ C")
+    
+    if english_programs:
         recommendations.append({
-            'cluster': 'Engineering & Technology',
-            'programs': [
-                'Asasi Kejuruteraan & Teknologi (UTM)',
-                'Asasi Kejuruteraan & Teknologi (UMP)'
-            ],
-            'score': 'Tinggi'
-        })
-    elif add_math >= 60 and (fizik >= 60 or kim >= 60):
-        recommendations.append({
-            'cluster': 'Engineering & Technology',
-            'programs': [
-                'Asasi Kejuruteraan & Teknologi (UTM)',
-                'Asasi Kejuruteraan & Teknologi (UMP)'
-            ],
-            'score': 'Sederhana'
+            'cluster': 'Language & Communication',
+            'programs': english_programs,
+            'reasons': english_reasons,
+            'score': 'Layak'
         })
     
-    # ---------- Accounting ----------
+    # ---------- ASASI KEJURUTERAAN ----------
+    # Syarat: Add Math ≥ B (75), (Fizik ≥ B ATAU Kimia ≥ B), BM & Math ≥ A- (85)
+    eng_programs = []
+    eng_reasons = []
+    if add_math >= 75 and (fizik >= 75 or kim >= 75) and bm >= 85 and math >= 85:
+        eng_programs.append("Asasi Kejuruteraan & Teknologi (UTM)")
+        eng_programs.append("Asasi Kejuruteraan & Teknologi (UMP)")
+        eng_reasons.append(f"Add Math ({row.get('M-T', 'N/A')}) ≥ B, Fizik/Kimia ≥ B, BM & Math ≥ A-")
+    
+    if eng_programs:
+        recommendations.append({
+            'cluster': 'Engineering & Technology',
+            'programs': eng_programs,
+            'reasons': eng_reasons,
+            'score': 'Layak'
+        })
+    
+    # ---------- DIPLOMA IN ACCOUNTING ----------
+    # Syarat: ACC ≥ B (75), Math ≥ B (75)
+    acc_programs = []
+    acc_reasons = []
     if acc >= 75 and math >= 75:
+        acc_programs.append("Diploma in Accounting")
+        acc_programs.append("Diploma in Accounting + SAP")
+        acc_reasons.append(f"ACC ({row.get('ACC', 'N/A')}) ≥ B, Math ({row.get('MAT', 'N/A')}) ≥ B")
+    
+    if acc_programs:
         recommendations.append({
             'cluster': 'Accounting & Finance',
-            'programs': [
-                'Diploma in Accounting',
-                'Diploma in Accounting + SAP'
-            ],
-            'score': 'Tinggi'
-        })
-    elif acc >= 60 or math >= 60:
-        recommendations.append({
-            'cluster': 'Accounting & Finance',
-            'programs': [
-                'Diploma in Accounting',
-                'Diploma in Islamic Finance'
-            ],
-            'score': 'Sederhana'
+            'programs': acc_programs,
+            'reasons': acc_reasons,
+            'score': 'Layak'
         })
     
-    # ---------- Language ----------
-    if bi >= 75 and bm >= 75:
-        recommendations.append({
-            'cluster': 'Language & Communication',
-            'programs': [
-                'Diploma in English Communication'
-            ],
-            'score': 'Tinggi'
-        })
-    elif bi >= 60 or bm >= 60:
-        recommendations.append({
-            'cluster': 'Language & Communication',
-            'programs': [
-                'Diploma in English Communication'
-            ],
-            'score': 'Sederhana'
-        })
+    # ---------- DIPLOMA IN COMPUTER SCIENCE ----------
+    # Syarat: Math ≥ B (75), BI ≥ B (75), BM ≥ C (60)
+    cs_programs = []
+    cs_reasons = []
+    if math >= 75 and bi >= 75 and bm >= 60:
+        cs_programs.append("Diploma in Computer Science")
+        cs_reasons.append(f"Math ({row.get('MAT', 'N/A')}) ≥ B, BI ({row.get('BI', 'N/A')}) ≥ B")
     
-    # ---------- Business ----------
-    business_score = max([commerce, eko]) if max([commerce, eko]) > 0 else 0
-    if business_score >= 75 and math >= 60:
-        recommendations.append({
-            'cluster': 'Business & Management',
-            'programs': [
-                'Diploma in Business Studies',
-                'Diploma in International Business'
-            ],
-            'score': 'Tinggi'
-        })
-    elif business_score >= 60:
-        recommendations.append({
-            'cluster': 'Business & Management',
-            'programs': [
-                'Diploma in Business Studies',
-                'Diploma in Marketing'
-            ],
-            'score': 'Sederhana'
-        })
-    
-    # ---------- Computer Science ----------
-    if sk >= 75 and math >= 60 and bi >= 60:
+    if cs_programs:
         recommendations.append({
             'cluster': 'Computer Science & IT',
-            'programs': [
-                'Diploma in Computer Science'
-            ],
-            'score': 'Tinggi'
-        })
-    elif math >= 75 and bi >= 60:
-        recommendations.append({
-            'cluster': 'Computer Science & IT',
-            'programs': [
-                'Diploma in Computer Science'
-            ],
-            'score': 'Sederhana'
+            'programs': cs_programs,
+            'reasons': cs_reasons,
+            'score': 'Layak'
         })
     
-    # ---------- Science ----------
-    science_score = max([bio, fizik, kim]) if max([bio, fizik, kim]) > 0 else 0
-    if science_score >= 75:
+    # ---------- ASASI SAINS ----------
+    # Syarat: Salah satu Bio/Fizik/Kim ≥ B (75), BM & Math ≥ A- (85)
+    science_programs = []
+    science_reasons = []
+    if (bio >= 75 or fizik >= 75 or kim >= 75) and bm >= 85 and math >= 85:
+        science_programs.append("Asasi Sains")
+        science_reasons.append(f"Bio/Fizik/Kim ≥ B, BM & Math ≥ A-")
+    
+    if science_programs:
         recommendations.append({
             'cluster': 'Science',
-            'programs': [
-                'Asasi Sains'
-            ],
-            'score': 'Tinggi'
-        })
-    elif science_score >= 60:
-        recommendations.append({
-            'cluster': 'Science',
-            'programs': [
-                'Asasi Sains'
-            ],
-            'score': 'Sederhana'
+            'programs': science_programs,
+            'reasons': science_reasons,
+            'score': 'Layak'
         })
     
-    return recommendations if recommendations else [{'cluster': 'Tiada', 'programs': ['Tiada cadangan khusus'], 'score': 'Rendah'}]
+    # ---------- DIPLOMA IN BUSINESS STUDIES ----------
+    # Syarat: Math ≥ C (60), BI ≥ C (60)
+    biz_programs = []
+    biz_reasons = []
+    if math >= 60 and bi >= 60:
+        biz_programs.append("Diploma in Business Studies")
+        biz_programs.append("Diploma in International Business")
+        biz_reasons.append(f"Math ({row.get('MAT', 'N/A')}) ≥ C, BI ({row.get('BI', 'N/A')}) ≥ C")
+    
+    if biz_programs:
+        recommendations.append({
+            'cluster': 'Business & Management',
+            'programs': biz_programs,
+            'reasons': biz_reasons,
+            'score': 'Layak'
+        })
+    
+    return recommendations if recommendations else [{"cluster": "Tiada", "programs": [], "reasons": ["Tiada program yang memenuhi syarat minimum"]}]
+
+# ============================================
+# FUNGSI UNTUK PAPAR SUBJEK
+# ============================================
+def display_subjects(row):
+    # Cari semua kolum subjek (yang ada dalam SUBJECT_NAMES)
+    subject_cols = [col for col in row.index if col in SUBJECT_NAMES and pd.notna(row.get(col)) and row.get(col) != 'NA' and row.get(col) != '']
+    
+    # Susun ikut abjad
+    subject_cols.sort()
+    
+    return subject_cols
 
 # Main area
 if cari_button:
@@ -309,89 +448,72 @@ if cari_button:
             # ============================================
             st.markdown("## 📚 **SUBJEK SPM**")
             
-            # Cari semua kolum subjek (yang ada dalam SUBJECT_NAMES)
-            subject_cols = [col for col in pelajar_terpilih.index if col in SUBJECT_NAMES]
+            subject_cols = display_subjects(pelajar_terpilih)
             
-            # Bahagikan kepada 3 column
-            cols = st.columns(3)
-            for i, subj_code in enumerate(subject_cols):
-                with cols[i % 3]:
-                    grade = pelajar_terpilih.get(subj_code, '')
-                    if pd.notna(grade) and grade != 'NA' and grade != '':
-                        st.markdown(f"**{SUBJECT_NAMES[subj_code]}**")
+            if subject_cols:
+                # Bahagikan kepada 3 column
+                cols = st.columns(3)
+                for i, subj_code in enumerate(subject_cols):
+                    with cols[i % 3]:
+                        grade = pelajar_terpilih.get(subj_code, '')
+                        st.markdown(f"**{SUBJECT_NAMES.get(subj_code, subj_code)}**")
                         st.info(grade)
+            else:
+                st.warning("Tiada data subjek SPM untuk pelajar ini.")
             
             # ============================================
-            # FEATURE ENGINEERING UNTUK MODEL
-            # ============================================
-            
-            # 1. Dapatkan cluster scores (guna fungsi sama)
-            cluster_scores = {}  # Kita tak guna untuk paperan, tapi untuk model
-            for rec in recommend_programs(pelajar_terpilih):
-                if rec['cluster'] != 'Tiada':
-                    cluster_scores[f"{rec['cluster']}_Score"] = 0.9 if rec['score'] == 'Tinggi' else 0.6
-            
-            # 2. Encode demographic
-            demo_features = {
-                'JANTINA': 1 if pelajar_terpilih.get('JANTINA') == 'P' else 0,
-                'LOKASI': 1 if pelajar_terpilih.get('LOKASI') == 'BANDAR' else 0,
-                'ALIRAN': 1 if pelajar_terpilih.get('ALIRAN') == 'STEM' else 0,
-                'PENDAPATAN': pelajar_terpilih.get('PENDAPATAN', 0)
-            }
-            
-            # 3. SPM grades (semua subjek)
-            spm_features = {}
-            for subj in subject_cols:
-                spm_features[subj] = grade_to_numeric(pelajar_terpilih.get(subj, 0))
-            
-            # 4. Gabungkan semua features
-            all_features = {}
-            all_features.update(demo_features)
-            all_features.update(spm_features)
-            all_features.update(cluster_scores)
-            
-            # 5. Isi feature yang missing dengan 0
-            for f in feature_names:
-                if f not in all_features:
-                    all_features[f] = 0
-            
-            # Buat dataframe
-            feature_df = pd.DataFrame([all_features])
-            feature_df = feature_df[feature_names]
-            
-            # Predict
-            prediction = model.predict(feature_df)[0]
-            probability = model.predict_proba(feature_df)[0][1]
-            
-            # ============================================
-            # PAPAR KEPUTUSAN
+            # PAPAR KEPUTUSAN CADANGAN
             # ============================================
             st.markdown("---")
-            st.markdown("## 📊 **KEPUTUSAN CADANGAN**")
+            st.markdown("## 📊 **KEPUTUSAN CADANGAN PROGRAM**")
             
-            col_a, col_b = st.columns(2)
+            # Dapatkan cadangan berdasarkan syarat sebenar
+            recommendations = recommend_programs(pelajar_terpilih)
             
-            with col_a:
-                st.markdown("### 📈 Status Tawaran")
-                if prediction == 1:
-                    st.success(f"✅ **DITAWARKAN**")
-                else:
-                    st.error(f"❌ **TIDAK DITAWARKAN**")
-                st.metric("Kebarangkalian", f"{probability:.1%}")
+            if recommendations and recommendations[0]['cluster'] != 'Tiada' and recommendations[0]['cluster'] != 'Tidak Layak':
+                for rec in recommendations:
+                    with st.expander(f"**{rec['cluster']}**"):
+                        for prog in rec['programs']:
+                            st.write(f"✅ {prog}")
+                        if rec['reasons']:
+                            st.caption("📌 " + ", ".join(rec['reasons']))
+            elif recommendations and recommendations[0]['cluster'] == 'Tidak Layak':
+                st.error("❌ " + recommendations[0]['reasons'][0])
+            else:
+                st.warning("Tiada cadangan program yang memenuhi syarat minimum.")
             
-            with col_b:
-                st.markdown("### 🎯 Program Dicadangkan")
+            # ============================================
+            # PAPAR PREDIKSI MODEL (optional)
+            # ============================================
+            with st.expander("🔍 Analisis Model (untuk rujukan)"):
+                # Sediakan features untuk model
+                subject_cols_all = [col for col in pelajar_terpilih.index if col in SUBJECT_NAMES]
                 
-                # Dapatkan cadangan berdasarkan subjek
-                recommendations = recommend_programs(pelajar_terpilih)
+                all_features = {}
                 
-                if recommendations and recommendations[0]['cluster'] != 'Tiada':
-                    for rec in recommendations:
-                        with st.expander(f"**{rec['cluster']}** (Kesesuaian: {rec['score']})"):
-                            for prog in rec['programs']:
-                                st.write(f"- {prog}")
-                else:
-                    st.warning("Tiada cadangan program khusus berdasarkan subjek yang diambil.")
+                # Demographic features
+                all_features['JANTINA'] = 1 if pelajar_terpilih.get('JANTINA') == 'P' else 0
+                all_features['LOKASI'] = 1 if pelajar_terpilih.get('LOKASI') == 'BANDAR' else 0
+                all_features['ALIRAN'] = 1 if pelajar_terpilih.get('ALIRAN') == 'STEM' else 0
+                all_features['PENDAPATAN'] = pelajar_terpilih.get('PENDAPATAN', 0)
+                
+                # Subject grades
+                for subj in subject_cols_all:
+                    all_features[subj] = grade_to_numeric(pelajar_terpilih.get(subj, 0))
+                
+                # Isi feature missing dengan 0
+                for f in feature_names:
+                    if f not in all_features:
+                        all_features[f] = 0
+                
+                feature_df = pd.DataFrame([all_features])
+                feature_df = feature_df[feature_names]
+                
+                prediction = model.predict(feature_df)[0]
+                probability = model.predict_proba(feature_df)[0][1]
+                
+                st.write(f"**Prediksi model:** {'DITAWARKAN' if prediction == 1 else 'TIDAK DITAWARKAN'}")
+                st.write(f"**Kebarangkalian:** {probability:.1%}")
             
             # ============================================
             # PAPAR PILIHAN PROGRAM ASAL
@@ -408,4 +530,4 @@ if cari_button:
 
 # Footer
 st.markdown("---")
-st.markdown("💡 *Sistem ini adalah prototype untuk membantu pegawai MARA membuat keputusan.*")
+st.markdown("💡 *Sistem ini adalah prototype untuk membantu pegawai MARA membuat keputusan berdasarkan syarat kelayakan program.*")
