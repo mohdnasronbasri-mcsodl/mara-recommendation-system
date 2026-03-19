@@ -20,17 +20,18 @@ def load_model():
     return joblib.load('mara_model.pkl')
 
 model = load_model()
-
-# Dapatkan feature names dari model
 feature_names = model.feature_names_in_
 expected_features = list(feature_names)
 
-st.sidebar.write(f"✅ Model sedia (menjangka {len(expected_features)} features)")
-
-# Sidebar untuk input
+# Sidebar
 st.sidebar.header("📋 Maklumat Pelajar")
 
 with st.sidebar.form("pelajar_form"):
+    # TAMBAH ID PELAJAR
+    st.subheader("🆔 Identiti")
+    nama_pelajar = st.text_input("Nama Pelajar", value="", placeholder="Contoh: Ahmad Bin Ali")
+    id_pelajar = st.text_input("No. ID / MyKad", value="", placeholder="Contoh: 050119050140")
+    
     st.subheader("Demografi")
     jantina = st.selectbox("Jantina", ["L", "P"])
     lokasi = st.selectbox("Lokasi", ["BANDAR", "LUAR BANDAR"])
@@ -64,11 +65,11 @@ def grade_to_numeric(grade):
     }
     return mapping.get(grade, 0)
 
-# Fungsi untuk buat semua features
-def create_full_features(jantina, lokasi, aliran, pendapatan, bm, bi, math, sejarah, add_math, physics, chemistry, biology, accounting):
+# Fungsi untuk buat semua 299 features
+def create_all_features(jantina, lokasi, aliran, pendapatan, bm, bi, math, sejarah, add_math, physics, chemistry, biology, accounting):
     
-    # Base features (yang kita ada)
-    base_data = {
+    # 1. Encode features asas
+    base_features = {
         'JANTINA': 1 if jantina == 'P' else 0,
         'LOKASI': 1 if lokasi == 'BANDAR' else 0,
         'ALIRAN': 1 if aliran == 'STEM' else 0,
@@ -84,65 +85,97 @@ def create_full_features(jantina, lokasi, aliran, pendapatan, bm, bi, math, seja
         'ACC': grade_to_numeric(accounting)
     }
     
-    # Buat dataframe dengan semua features (set 0 untuk yang lain)
+    # 2. Generate all 299 features dengan nilai 0 untuk yang tak diisi
     full_data = {}
     for feature in expected_features:
-        if feature in base_data:
-            full_data[feature] = base_data[feature]
+        if feature in base_features:
+            full_data[feature] = base_features[feature]
         else:
-            full_data[feature] = 0  # isi dengan 0 untuk feature yang tak ada input
+            full_data[feature] = 0  # default value
     
     return pd.DataFrame([full_data])
 
 if submitted:
     with st.spinner("Memproses cadangan..."):
-        # Buat dataframe dengan semua features
-        input_df = create_full_features(
-            jantina, lokasi, aliran, pendapatan,
-            bm, bi, math, sejarah,
-            add_math, physics, chemistry, biology, accounting
-        )
-        
-        # Ramal
-        prediction = model.predict(input_df)[0]
-        probability = model.predict_proba(input_df)[0][1]
-        
-        # TUNJUK HASIL
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("📊 Keputusan")
-            if prediction == 1:
-                st.success(f"✅ **DITAWARKAN**")
-                st.metric("Kebarangkalian", f"{probability:.1%}")
-            else:
-                st.error(f"❌ **TIDAK DITAWARKAN**")
-                st.metric("Kebarangkalian", f"{probability:.1%}")
-        
-        with col2:
-            st.subheader("🎯 Program Dicadangkan")
+        # Validasi input
+        if not nama_pelajar or not id_pelajar:
+            st.error("❌ Sila isi Nama dan ID pelajar")
+        else:
+            # Buat features
+            input_df = create_all_features(
+                jantina, lokasi, aliran, pendapatan,
+                bm, bi, math, sejarah,
+                add_math, physics, chemistry, biology, accounting
+            )
             
-            if prediction == 1:
-                if grade_to_numeric(add_math) >= 75 and (grade_to_numeric(physics) >= 75 or grade_to_numeric(chemistry) >= 75):
-                    st.info("🏗️ **Engineering & Technology**")
-                    st.write("- Asasi Kejuruteraan & Teknologi (UTM)")
-                    st.write("- Asasi Kejuruteraan & Teknologi (UMP)")
+            # Ramal
+            prediction = model.predict(input_df)[0]
+            probability = model.predict_proba(input_df)[0][1]
+            
+            # TUNJUK IDENTITI PELAJAR
+            st.subheader(f"👤 {nama_pelajar} ({id_pelajar})")
+            
+            # TUNJUK HASIL
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("📊 Keputusan")
+                if prediction == 1:
+                    st.success(f"✅ **DITAWARKAN**")
+                    st.metric("Kebarangkalian", f"{probability:.1%}")
+                else:
+                    st.error(f"❌ **TIDAK DITAWARKAN**")
+                    st.metric("Kebarangkalian", f"{probability:.1%}")
+            
+            with col2:
+                st.subheader("🎯 Program Dicadangkan")
                 
-                if grade_to_numeric(accounting) >= 60:
-                    st.info("💰 **Accounting & Finance**")
-                    st.write("- Diploma in Accounting")
-                    st.write("- Diploma in Accounting + SAP")
-                
-                if grade_to_numeric(bi) >= 75 and grade_to_numeric(bm) >= 75:
-                    st.info("🗣️ **Language & Communication**")
-                    st.write("- Diploma in English Communication")
-            else:
-                st.warning("Tiada cadangan program. Sila tingkatkan pencapaian akademik.")
-        
-        # Debug info (optional)
-        with st.expander("🔍 Technical Details"):
-            st.write("Input features:", input_df.to_dict())
-            st.write(f"Expected features count: {len(expected_features)}")
+                if prediction == 1:
+                    recommendations = []
+                    
+                    # Engineering
+                    if grade_to_numeric(add_math) >= 75 and (grade_to_numeric(physics) >= 75 or grade_to_numeric(chemistry) >= 75):
+                        recommendations.append("🏗️ **Engineering & Technology**\n- Asasi Kejuruteraan & Teknologi (UTM)\n- Asasi Kejuruteraan & Teknologi (UMP)")
+                    
+                    # Accounting
+                    if grade_to_numeric(accounting) >= 60:
+                        recommendations.append("💰 **Accounting & Finance**\n- Diploma in Accounting\n- Diploma in Accounting + SAP")
+                    
+                    # Language
+                    if grade_to_numeric(bi) >= 75 and grade_to_numeric(bm) >= 75:
+                        recommendations.append("🗣️ **Language & Communication**\n- Diploma in English Communication")
+                    
+                    # Business
+                    if grade_to_numeric(math) >= 60 and grade_to_numeric(bi) >= 60:
+                        recommendations.append("📊 **Business & Management**\n- Diploma in Business Studies\n- Diploma in International Business")
+                    
+                    if recommendations:
+                        for rec in recommendations:
+                            st.info(rec)
+                    else:
+                        st.info("📚 Program umum - sila rujuk pegawai MARA")
+                else:
+                    st.warning("Tiada cadangan program khusus. Sila tingkatkan pencapaian akademik.")
+            
+            # Tunjukkan ringkasan input
+            with st.expander("🔍 Ringkasan Input"):
+                st.json({
+                    "Nama": nama_pelajar,
+                    "ID": id_pelajar,
+                    "Jantina": jantina,
+                    "Lokasi": lokasi,
+                    "Aliran": aliran,
+                    "Pendapatan": f"RM {pendapatan}",
+                    "BM": bm,
+                    "BI": bi,
+                    "Math": math,
+                    "Sejarah": sejarah,
+                    "Add Math": add_math,
+                    "Fizik": physics,
+                    "Kimia": chemistry,
+                    "Biologi": biology,
+                    "ACC": accounting
+                })
 
 # Footer
 st.markdown("---")
