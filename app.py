@@ -24,7 +24,7 @@ model, df = load_model_and_data()
 feature_names = list(model.feature_names_in_)
 
 # ============================================
-# KAMUS SUBJEK SPM
+# KAMUS SUBJEK SPM (RINGKAS)
 # ============================================
 SUBJECT_NAMES = {
     'BM': 'BAHASA MELAYU', 'BI': 'BAHASA INGGERIS', 'PI': 'PENDIDIKAN ISLAM',
@@ -33,7 +33,7 @@ SUBJECT_NAMES = {
     'BIO': 'BIOLOGI', 'ACC': 'PRINSIP PERAKAUNAN', 'PT': 'PERDAGANGAN',
     'EKO': 'EKONOMI', 'SK': 'SAINS KOMPUTER', 'PQS': 'PENDIDIKAN AL-QURAN DAN AL-SUNNAH',
     'PSI': "PENDIDIKAN SYARI'AH ISLAMIAH", 'TSI': 'TASAWWUR ISLAM',
-    'BAT': 'BAHASA ARAB', 'PI': 'PENDIDIKAN ISLAM'
+    'BAT': 'BAHASA ARAB'
 }
 
 # ============================================
@@ -42,13 +42,25 @@ SUBJECT_NAMES = {
 def grade_to_numeric(grade):
     if pd.isna(grade) or grade == 'NA' or grade == '':
         return 0
-    mapping = {'A+':95,'A':90,'A-':85,'B+':80,'B':75,'B-':70,
-               'C+':65,'C':60,'C-':55,'D':50,'E':45}
+    mapping = {
+        'A+': 95, 'A': 90, 'A-': 85,
+        'B+': 80, 'B': 75, 'B-': 70,
+        'C+': 65, 'C': 60, 'C-': 55,
+        'D': 50, 'E': 45, 'F': 40,
+        'G': 30
+    }
     val = str(grade).strip().upper()
-    return mapping.get(val, 0)
+    # Handle kes macam 'A' je
+    if val in mapping:
+        return mapping[val]
+    # Handle kes macam 'A+' etc
+    for key in mapping:
+        if val.startswith(key):
+            return mapping[key]
+    return 0
 
 # ============================================
-# SENARAI SEMUA PROGRAM
+# SENARAI SEMUA PROGRAM (DENGAN SYARAT LEBIH FLEKSIBEL)
 # ============================================
 ALL_PROGRAMS = [
     {
@@ -59,58 +71,113 @@ ALL_PROGRAMS = [
     {
         'name': 'Diploma in Halal Industry + Halal Executive Certification',
         'cluster': 'Halal',
-        'syarat': {'PI': 75, 'PQS': 75, 'PSI': 75, 'BM': 60, 'BI': 60, 'SEJ': 40},
-        'syarat_alternatif': {'islam_score': 75, 'BM': 60, 'BI': 60}
+        'syarat': {'BM': 60, 'BI': 60, 'SEJ': 40},
+        'syarat_islam': {'PI': 60, 'PQS': 60, 'PSI': 60}  # Salah satu ≥ 60
     },
     {
         'name': 'Diploma in Islamic Finance + Associate Qualification',
         'cluster': 'Islamic Finance',
-        'syarat': {'MAT': 60, 'PI': 60, 'BM': 60, 'SEJ': 40}
+        'syarat': {'MAT': 60, 'BM': 60, 'SEJ': 40},
+        'syarat_islam': {'PI': 50, 'PQS': 50, 'PSI': 50}  # Salah satu ≥ 50
     },
     {
         'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
         'cluster': 'Engineering',
-        'syarat': {'M-T': 75, 'FIZ': 75, 'KIM': 75, 'BM': 85, 'MAT': 85, 'SEJ': 40},
-        'syarat_alternatif': {'M-T': 75, 'sains_min': 75, 'BM': 85, 'MAT': 85}
+        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},  # Turunkan sikit
+        'syarat_sains': {'FIZ': 70, 'KIM': 70}  # Salah satu ≥ 70
     },
     {
         'name': 'Asasi Kejuruteraan & Teknologi (UMP)',
         'cluster': 'Engineering',
-        'syarat': {'M-T': 75, 'FIZ': 75, 'KIM': 75, 'BM': 85, 'MAT': 85, 'SEJ': 40},
-        'syarat_alternatif': {'M-T': 75, 'sains_min': 75, 'BM': 85, 'MAT': 85}
+        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},
+        'syarat_sains': {'FIZ': 70, 'KIM': 70}
     },
     {
         'name': 'Diploma in Accounting',
         'cluster': 'Accounting',
-        'syarat': {'ACC': 75, 'MAT': 75, 'SEJ': 40}
+        'syarat': {'ACC': 70, 'MAT': 70, 'SEJ': 40}
     },
     {
         'name': 'Diploma in Accounting + SAP',
         'cluster': 'Accounting',
-        'syarat': {'ACC': 75, 'MAT': 75, 'SEJ': 40}
+        'syarat': {'ACC': 70, 'MAT': 70, 'SEJ': 40}
     },
     {
         'name': 'Diploma in Computer Science',
         'cluster': 'Computer',
-        'syarat': {'MAT': 75, 'BI': 75, 'BM': 60, 'SEJ': 40}
+        'syarat': {'MAT': 70, 'BI': 70, 'BM': 60, 'SEJ': 40}
     },
     {
         'name': 'Asasi Sains',
         'cluster': 'Science',
-        'syarat': {'BIO': 75, 'FIZ': 75, 'KIM': 75, 'BM': 85, 'MAT': 85, 'SEJ': 40},
-        'syarat_alternatif': {'sains_min': 75, 'BM': 85, 'MAT': 85}
+        'syarat': {'BM': 80, 'MAT': 80, 'SEJ': 40},
+        'syarat_sains': {'BIO': 70, 'FIZ': 70, 'KIM': 70}  # Salah satu ≥ 70
     },
     {
         'name': 'Diploma in Business Studies',
         'cluster': 'Business',
-        'syarat': {'MAT': 60, 'BI': 60, 'SEJ': 40}
+        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}  # Turunkan sikit
     },
     {
         'name': 'Diploma in International Business',
         'cluster': 'Business',
-        'syarat': {'MAT': 60, 'BI': 60, 'SEJ': 40}
+        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}
     }
 ]
+
+# ============================================
+# FUNGSI SEMAK KELAYAKAN (DENGAN DEBUG)
+# ============================================
+def is_eligible(row, program, debug=False):
+    results = []
+    
+    # Semak Sejarah
+    sejarah = grade_to_numeric(row.get('SEJ', 0))
+    if sejarah < 40:
+        if debug: results.append(f"❌ Sejarah: {sejarah} < 40")
+        return False, results
+    
+    # Semak syarat asas
+    syarat = program.get('syarat', {})
+    for subj, min_nilai in syarat.items():
+        if subj in ['BM', 'BI', 'MAT', 'M-T', 'ACC']:
+            nilai = grade_to_numeric(row.get(subj, 0))
+            if nilai < min_nilai:
+                if debug: results.append(f"❌ {subj}: {nilai} < {min_nilai}")
+                return False, results
+            else:
+                if debug: results.append(f"✅ {subj}: {nilai} ≥ {min_nilai}")
+    
+    # Semak syarat sains (jika ada)
+    if 'syarat_sains' in program:
+        sains_ok = False
+        for subj, min_nilai in program['syarat_sains'].items():
+            nilai = grade_to_numeric(row.get(subj, 0))
+            if nilai >= min_nilai:
+                sains_ok = True
+                if debug: results.append(f"✅ Sains ({subj}): {nilai} ≥ {min_nilai}")
+                break
+        if not sains_ok:
+            if debug: results.append(f"❌ Tiada sains mencapai syarat")
+            return False, results
+    
+    # Semak syarat islam (jika ada)
+    if 'syarat_islam' in program:
+        islam_ok = False
+        for subj, min_nilai in program['syarat_islam'].items():
+            nilai = grade_to_numeric(row.get(subj, 0))
+            if nilai >= min_nilai:
+                islam_ok = True
+                if debug: results.append(f"✅ Islam ({subj}): {nilai} ≥ {min_nilai}")
+                break
+        if not islam_ok:
+            if debug: results.append(f"❌ Tiada subjek islam mencapai syarat")
+            return False, results
+    
+    if debug and not results:
+        results.append("✅ Semua syarat dipenuhi")
+    
+    return True, results
 
 # ============================================
 # FUNGSI HITUNG SKOR KESESUAIAN
@@ -119,93 +186,52 @@ def hitung_skor(row, program):
     skor = 0
     total_bobot = 0
     
-    # Bobot: demografi 10%, pendapatan 10%, subjek 80%
-    
     # Demografi (10%)
-    if row.get('JANTINA') in ['L', 'P']:
-        skor += 5
-    if row.get('LOKASI') in ['BANDAR', 'LUAR BANDAR']:
-        skor += 5
+    skor += 10
     total_bobot += 10
     
-    # Pendapatan (10%) - lebih rendah lebih baik untuk B40
+    # Pendapatan (10%) - B40 dapat bonus
     pendapatan = row.get('PENDAPATAN', 5000)
     if pendapatan < 3000:
         skor += 10
     elif pendapatan < 5000:
-        skor += 7
+        skor += 8
     elif pendapatan < 8000:
-        skor += 5
+        skor += 6
     else:
-        skor += 3
+        skor += 4
     total_bobot += 10
     
     # Subjek (80%)
-    subjek_bobot = 0
-    subjek_skor = 0
+    subjek_count = 0
+    subjek_total = 0
     
-    for subj, min_nilai in program.get('syarat', {}).items():
+    # Semua subjek dalam syarat
+    all_syarat = []
+    all_syarat.extend(program.get('syarat', {}).keys())
+    if 'syarat_sains' in program:
+        all_syarat.extend(program['syarat_sains'].keys())
+    if 'syarat_islam' in program:
+        all_syarat.extend(program['syarat_islam'].keys())
+    
+    unique_subjek = list(set(all_syarat))
+    
+    for subj in unique_subjek:
         if subj in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
-            nilai_pelajar = grade_to_numeric(row.get(subj, 0))
-            if nilai_pelajar >= min_nilai:
-                subjek_skor += min_nilai
-                subjek_bobot += min_nilai
-            else:
-                # Kurang skor kalau tak capai
-                subjek_skor += nilai_pelajar * 0.5
-                subjek_bobot += min_nilai
+            nilai = grade_to_numeric(row.get(subj, 0))
+            if nilai > 0:
+                subjek_total += nilai
+                subjek_count += 1
     
-    if subjek_bobot > 0:
-        skor += (subjek_skor / subjek_bobot) * 80
+    if subjek_count > 0:
+        purata = subjek_total / subjek_count
+        skor += purata * 0.8  # 80% dari purata subjek
         total_bobot += 80
     
-    # Normalisasi ke 0-100
+    # Normalisasi
     if total_bobot > 0:
         return round((skor / total_bobot) * 100, 1)
-    return 0
-
-# ============================================
-# FUNGSI SEMAK KELAYAKAN
-# ============================================
-def is_eligible(row, program):
-    syarat = program.get('syarat', {})
-    syarat_alt = program.get('syarat_alternatif', {})
-    
-    # Semak Sejarah dulu
-    if grade_to_numeric(row.get('SEJ', 0)) < 40:
-        return False
-    
-    # Guna syarat alternatif kalau ada
-    if syarat_alt:
-        if 'islam_score' in syarat_alt:
-            islam_score = max([
-                grade_to_numeric(row.get('PI', 0)),
-                grade_to_numeric(row.get('PQS', 0)),
-                grade_to_numeric(row.get('PSI', 0))
-            ])
-            if (islam_score >= syarat_alt['islam_score'] and
-                grade_to_numeric(row.get('BM', 0)) >= syarat_alt.get('BM', 0) and
-                grade_to_numeric(row.get('BI', 0)) >= syarat_alt.get('BI', 0)):
-                return True
-        
-        if 'sains_min' in syarat_alt:
-            sains_score = max([
-                grade_to_numeric(row.get('FIZ', 0)),
-                grade_to_numeric(row.get('KIM', 0)),
-                grade_to_numeric(row.get('BIO', 0))
-            ])
-            if (sains_score >= syarat_alt['sains_min'] and
-                grade_to_numeric(row.get('BM', 0)) >= syarat_alt.get('BM', 0) and
-                grade_to_numeric(row.get('MAT', 0)) >= syarat_alt.get('MAT', 0)):
-                return True
-    
-    # Guna syarat biasa
-    for subj, min_nilai in syarat.items():
-        if subj in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI']:
-            if grade_to_numeric(row.get(subj, 0)) < min_nilai:
-                return False
-    
-    return True
+    return 50  # default
 
 # ============================================
 # SIDEBAR PENCARIAN
@@ -214,9 +240,9 @@ st.sidebar.header("🔍 Cari Pelajar")
 cari_melalui = st.sidebar.radio("Cari melalui:", ["NOKP", "Nama"])
 
 if cari_melalui == "NOKP":
-    nokp_input = st.sidebar.text_input("Masukkan 12 digit NOKP")
+    nokp_input = st.sidebar.text_input("Masukkan 12 digit NOKP", placeholder="Contoh: 030807060678")
 else:
-    nama_input = st.sidebar.text_input("Masukkan nama penuh")
+    nama_input = st.sidebar.text_input("Masukkan nama penuh", placeholder="Contoh: NUR AELYA")
 
 cari_button = st.sidebar.button("🔍 Cari Pelajar")
 
@@ -238,6 +264,17 @@ if cari_button:
             row = pelajar.iloc[0]
             
             # ============================================
+            # DEBUG: TUNJUK GRED PENTING
+            # ============================================
+            with st.expander("🔍 DEBUG: Gred Penting"):
+                penting = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI']
+                data = {}
+                for subj in penting:
+                    if subj in row.index:
+                        data[subj] = f"{row[subj]} ({grade_to_numeric(row[subj])})"
+                st.json(data)
+            
+            # ============================================
             # LAYOUT 2 COLUMN
             # ============================================
             col_kiri, col_kanan = st.columns([1, 2])
@@ -256,23 +293,22 @@ if cari_button:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # SUBJEK SPM (COMPACT, FONT KECIL)
+                # SUBJEK SPM (RINGKAS)
                 st.markdown("### 📚 Subjek SPM")
                 
-                # Cari semua subjek yang ada nilai
                 subject_items = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_items.append(f"<tr><td>{name}</td><td><b>{grade}</b></td></tr>")
+                            numeric = grade_to_numeric(grade)
+                            subject_items.append(f"<tr><td>{name}</td><td><b>{grade}</b> ({numeric})</td></tr>")
                 
-                # Papar dalam jadual kecil
                 if subject_items:
                     st.markdown(f"""
                     <div style='font-size: 0.8em; max-height: 400px; overflow-y: auto'>
                     <table>
-                        {''.join(subject_items)}
+                        {''.join(subject_items[:20])}  {/* Had 20 subjek */}
                     </table>
                     </div>
                     """, unsafe_allow_html=True)
@@ -293,68 +329,90 @@ if cari_button:
                 
                 # Kira skor untuk semua program
                 program_scores = []
+                
                 for prog in ALL_PROGRAMS:
-                    if is_eligible(row, prog):
+                    eligible, debug_results = is_eligible(row, prog, debug=False)
+                    if eligible:
                         skor = hitung_skor(row, prog)
                         # Tambah bonus kalau dalam pilihan asal
                         in_original = any(prog['name'].lower() in p.lower() for p in pilihan_asal)
                         if in_original:
-                            skor = min(skor + 15, 100)  # Bonus 15%
+                            skor = min(skor + 15, 100)
+                        
                         program_scores.append({
                             'name': prog['name'],
                             'cluster': prog['cluster'],
                             'score': skor,
-                            'in_original': in_original
+                            'in_original': in_original,
+                            'debug': debug_results
                         })
-                
-                # Susun ikut skor tertinggi
-                program_scores.sort(key=lambda x: x['score'], reverse=True)
-                
-                # Ambil 5 terbaik
-                top5 = program_scores[:5]
-                
-                # Papar dalam format senarai
-                for i, prog in enumerate(top5, 1):
-                    # Tentukan warna berdasarkan skor
-                    if prog['score'] >= 80:
-                        color = "#28a745"  # Hijau
-                    elif prog['score'] >= 60:
-                        color = "#ffc107"  # Kuning
                     else:
-                        color = "#dc3545"  # Merah
-                    
-                    # Tambah ⭐ kalau dalam pilihan asal
-                    star = " ⭐" if prog['in_original'] else ""
-                    
-                    st.markdown(f"""
-                    <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {color}; background-color: #f8f9fa; border-radius: 3px;'>
-                        <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
-                        <span style='font-size: 0.9em; color: {color}'><b>Kesesuaian: {prog['score']}%</b></span>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        # Untuk debug, kita boleh tengok kenapa tak layak
+                        pass
                 
-                # Info tambahan
-                with st.expander("📊 Perincian Skor"):
-                    st.markdown("""
-                    **Komponen skor:**
-                    - Demografi: 10%
-                    - Pendapatan: 10% (B40 > T20)
-                    - Subjek: 80% (berdasarkan syarat program)
-                    - Bonus: +15% jika dalam pilihan asal
-                    
-                    **Kelayakan:**
-                    - ≥80%: Sangat sesuai
-                    - 60-79%: Sederhana sesuai
-                    - <60%: Kurang sesuai
-                    """)
+                # DEBUG: TUNJUK BILANGAN PROGRAM LAYAK
+                st.caption(f"📊 Program layak: {len(program_scores)} daripada {len(ALL_PROGRAMS)}")
                 
-                # Papar pilihan asal untuk rujukan
-                with st.expander("📋 Pilihan Asal Pelajar"):
-                    for i, p in enumerate(pilihan_asal, 1):
-                        # Cek sama ada dalam top5
-                        in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
-                        status = "✓ Dalam cadangan" if in_top5 else "✗ Tiada dalam cadangan"
-                        st.write(f"**PIL{i}:** {p} - {status}")
+                if len(program_scores) == 0:
+                    st.warning("⚠️ Tiada program yang layak berdasarkan syarat semasa. Cuba semak subjek pelajar.")
                     
-                    if 'KURSUSJAYA' in row.index:
-                        st.write(f"**Status sebenar:** {row['KURSUSJAYA']}")
+                    # Cadangan manual untuk debug
+                    with st.expander("🔍 Debug: Semua program"):
+                        for prog in ALL_PROGRAMS:
+                            eligible, reasons = is_eligible(row, prog, debug=True)
+                            status = "✅ LAYAK" if eligible else "❌ TIDAK LAYAK"
+                            st.write(f"**{prog['name']}** - {status}")
+                            for r in reasons:
+                                st.caption(r)
+                else:
+                    # Susun ikut skor tertinggi
+                    program_scores.sort(key=lambda x: x['score'], reverse=True)
+                    
+                    # Ambil 5 terbaik
+                    top5 = program_scores[:5]
+                    
+                    # Papar dalam format senarai
+                    for i, prog in enumerate(top5, 1):
+                        # Tentukan warna berdasarkan skor
+                        if prog['score'] >= 80:
+                            color = "#28a745"  # Hijau
+                        elif prog['score'] >= 60:
+                            color = "#ffc107"  # Kuning
+                        else:
+                            color = "#dc3545"  # Merah
+                        
+                        # Tambah ⭐ kalau dalam pilihan asal
+                        star = " ⭐" if prog['in_original'] else ""
+                        
+                        st.markdown(f"""
+                        <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {color}; background-color: #f8f9fa; border-radius: 3px;'>
+                            <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
+                            <span style='font-size: 0.9em; color: {color}'><b>Kesesuaian: {prog['score']}%</b></span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Info tambahan
+                    with st.expander("📊 Perincian Skor"):
+                        st.markdown("""
+                        **Komponen skor:**
+                        - Demografi: 10%
+                        - Pendapatan: 10% (B40 > T20)
+                        - Subjek: 80% (purata subjek berkaitan)
+                        - Bonus: +15% jika dalam pilihan asal
+                        
+                        **Kelayakan:**
+                        - ≥80%: Sangat sesuai
+                        - 60-79%: Sederhana sesuai
+                        - <60%: Kurang sesuai
+                        """)
+                    
+                    # Papar pilihan asal untuk rujukan
+                    with st.expander("📋 Pilihan Asal Pelajar"):
+                        for i, p in enumerate(pilihan_asal, 1):
+                            # Cek sama ada dalam top5
+                            in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
+                            status = "✓ Dalam cadangan" if in_top5 else "✗ Tiada dalam cadangan"
+                            st.write(f"**PIL{i}:** {p} - {status}")
+                        
+                        if 'KURSUSJAYA' in row.index:
+                            st.write(f"**Status sebenar:** {row['KURSUSJAYA']}")
