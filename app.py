@@ -72,19 +72,19 @@ ALL_PROGRAMS = [
         'name': 'Diploma in Halal Industry + Halal Executive Certification',
         'cluster': 'Halal',
         'syarat': {'BM': 60, 'BI': 60, 'SEJ': 40},
-        'syarat_islam': {'PI': 60, 'PQS': 60, 'PSI': 60}  # Salah satu ≥ 60
+        'syarat_islam': {'PI': 60, 'PQS': 60, 'PSI': 60}
     },
     {
         'name': 'Diploma in Islamic Finance + Associate Qualification',
         'cluster': 'Islamic Finance',
         'syarat': {'MAT': 60, 'BM': 60, 'SEJ': 40},
-        'syarat_islam': {'PI': 50, 'PQS': 50, 'PSI': 50}  # Salah satu ≥ 50
+        'syarat_islam': {'PI': 50, 'PQS': 50, 'PSI': 50}
     },
     {
         'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
         'cluster': 'Engineering',
-        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},  # Turunkan sikit
-        'syarat_sains': {'FIZ': 70, 'KIM': 70}  # Salah satu ≥ 70
+        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},
+        'syarat_sains': {'FIZ': 70, 'KIM': 70}
     },
     {
         'name': 'Asasi Kejuruteraan & Teknologi (UMP)',
@@ -111,12 +111,12 @@ ALL_PROGRAMS = [
         'name': 'Asasi Sains',
         'cluster': 'Science',
         'syarat': {'BM': 80, 'MAT': 80, 'SEJ': 40},
-        'syarat_sains': {'BIO': 70, 'FIZ': 70, 'KIM': 70}  # Salah satu ≥ 70
+        'syarat_sains': {'BIO': 70, 'FIZ': 70, 'KIM': 70}
     },
     {
         'name': 'Diploma in Business Studies',
         'cluster': 'Business',
-        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}  # Turunkan sikit
+        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}
     },
     {
         'name': 'Diploma in International Business',
@@ -225,13 +225,13 @@ def hitung_skor(row, program):
     
     if subjek_count > 0:
         purata = subjek_total / subjek_count
-        skor += purata * 0.8  # 80% dari purata subjek
+        skor += purata * 0.8
         total_bobot += 80
     
     # Normalisasi
     if total_bobot > 0:
         return round((skor / total_bobot) * 100, 1)
-    return 50  # default
+    return 50
 
 # ============================================
 # SIDEBAR PENCARIAN
@@ -305,10 +305,12 @@ if cari_button:
                             subject_items.append(f"<tr><td>{name}</td><td><b>{grade}</b> ({numeric})</td></tr>")
                 
                 if subject_items:
+                    # Ambil 20 subjek pertama dan papar
+                    items_to_show = ''.join(subject_items[:20])
                     st.markdown(f"""
                     <div style='font-size: 0.8em; max-height: 400px; overflow-y: auto'>
                     <table>
-                        {''.join(subject_items[:20])}  {/* Had 20 subjek */}
+                        {items_to_show}
                     </table>
                     </div>
                     """, unsafe_allow_html=True)
@@ -346,9 +348,6 @@ if cari_button:
                             'in_original': in_original,
                             'debug': debug_results
                         })
-                    else:
-                        # Untuk debug, kita boleh tengok kenapa tak layak
-                        pass
                 
                 # DEBUG: TUNJUK BILANGAN PROGRAM LAYAK
                 st.caption(f"📊 Program layak: {len(program_scores)} daripada {len(ALL_PROGRAMS)}")
