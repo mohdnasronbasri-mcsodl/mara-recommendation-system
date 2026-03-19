@@ -425,9 +425,20 @@ cari_button = st.sidebar.button("🔍 Cari Pelajar")
 # ============================================
 if cari_button:
     with st.spinner("Mencari pelajar..."):
-        if cari_melalui == "NOKP" and nokp_input:
+        # VALIDASI INPUT TAK KOSONG
+        if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
+            st.error("❌ Sila masukkan NOKP")
+            st.stop()
+        elif cari_melalui == "Nama" and (not nama_input or nama_input.strip() == ""):
+            st.error("❌ Sila masukkan nama")
+            st.stop()
+        
+        # CARIAN
+        if cari_melalui == "NOKP":
             pelajar = df[df['NOKP'].astype(str).str.contains(nokp_input, na=False)]
         else:
+            # Handle NaN dalam kolum NAMA
+            df['NAMA'] = df['NAMA'].fillna('')
             pelajar = df[df['NAMA'].str.contains(nama_input, case=False, na=False)]
         
         if len(pelajar) == 0:
@@ -454,12 +465,12 @@ if cari_button:
                 
                 # PROFIL DALAM TABLE (TANPA LABEL)
                 profil_items = []
-                profil_items.append(f"<tr><td>{row['NOKP']}</td></tr>")
-                profil_items.append(f"<tr><td>{row['NAMA']}</td></tr>")
-                profil_items.append(f"<tr><td>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>")
-                profil_items.append(f"<tr><td>{row.get('LOKASI', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td>{row.get('ALIRAN', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{row['NOKP']}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{row['NAMA']}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{row.get('LOKASI', 'N/A')}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{row.get('ALIRAN', 'N/A')}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
                 
                 st.markdown(f"""
                 <div style='max-height: 300px; overflow-y: auto; margin-bottom: 20px;'>
@@ -469,7 +480,7 @@ if cari_button:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # SUBJEK SPM
+                # SUBJEK SPM (HANYA GRED, CENTER)
                 st.markdown("### 📚 Subjek SPM")
                 
                 subject_items = []
@@ -477,14 +488,14 @@ if cari_button:
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            numeric = grade_to_numeric(grade)
-                            subject_items.append(f"<tr><td>{name}</td><td><b>{grade}</b> ({numeric})</td></tr>")
+                            subject_items.append(f"<tr><td>{name}</td><td style='text-align:center'><b>{grade}</b></td></tr>")
                 
                 if subject_items:
                     items_to_show = ''.join(subject_items[:20])
                     st.markdown(f"""
                     <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
                     <table style='width:100%'>
+                        <tr><th>Subjek</th><th>Gred</th></tr>
                         {items_to_show}
                     </table>
                     </div>
@@ -573,7 +584,7 @@ if cari_button:
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
                         status = "✓" if in_top5 else "✗"
-                        table_rows.append(f"<tr><td>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
+                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
                     
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
