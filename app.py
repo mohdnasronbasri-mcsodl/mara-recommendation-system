@@ -58,123 +58,305 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# SENARAI PROGRAM (AKAN DIUPDATE)
+# FUNGSI BANTUAN
+# ============================================
+def count_subjects_ge(row, subjects, min_nilai):
+    count = 0
+    for subj in subjects:
+        if subj in row.index:
+            if grade_to_numeric(row[subj]) >= min_nilai:
+                count += 1
+    return count
+
+def get_best_in_list(row, subject_list):
+    best = 0
+    for subj in subject_list:
+        if subj in row.index:
+            best = max(best, grade_to_numeric(row[subj]))
+    return best
+
+# ============================================
+# SENARAI PROGRAM DENGAN SYARAT TERKINI
 # ============================================
 ALL_PROGRAMS = [
+    # ========== GROUP 1 ==========
     {
-        'name': 'Diploma in English Communication + Translation Certificate',
-        'cluster': 'Language',
-        'syarat': {'BI': 75, 'BM': 60, 'SEJ': 40}
+        'name': 'Diploma in Integrated Logistics Management + CILT',
+        'cluster': 'Logistics',
+        'group': 1,
+        'syarat': {
+            'BM': 60,  # C
+            'MAT': 40, # E
+            'SEJ': 40, # E
+            'BI_min': 40,  # E (tapi ada syarat khas)
+            'other_count': 2,
+            'other_min': 60,  # C
+            'BI_syarat_khas': True  # E/D kena pra-diploma
+        }
     },
     {
         'name': 'Diploma in Halal Industry + Halal Executive Certification',
         'cluster': 'Halal',
-        'syarat': {'BM': 60, 'BI': 60, 'SEJ': 40},
-        'syarat_islam': {'PI': 60, 'PQS': 60, 'PSI': 60}
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
     },
     {
         'name': 'Diploma in Islamic Finance + Associate Qualification',
         'cluster': 'Islamic Finance',
-        'syarat': {'MAT': 60, 'BM': 60, 'SEJ': 40},
-        'syarat_islam': {'PI': 50, 'PQS': 50, 'PSI': 50}
-    },
-    {
-        'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
-        'cluster': 'Engineering',
-        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},
-        'syarat_sains': {'FIZ': 70, 'KIM': 70}
-    },
-    {
-        'name': 'Asasi Kejuruteraan & Teknologi (UMP)',
-        'cluster': 'Engineering',
-        'syarat': {'M-T': 70, 'BM': 80, 'MAT': 80, 'SEJ': 40},
-        'syarat_sains': {'FIZ': 70, 'KIM': 70}
-    },
-    {
-        'name': 'Diploma in Accounting',
-        'cluster': 'Accounting',
-        'syarat': {'ACC': 70, 'MAT': 70, 'SEJ': 40}
-    },
-    {
-        'name': 'Diploma in Accounting + SAP',
-        'cluster': 'Accounting',
-        'syarat': {'ACC': 70, 'MAT': 70, 'SEJ': 40}
-    },
-    {
-        'name': 'Diploma in Computer Science',
-        'cluster': 'Computer',
-        'syarat': {'MAT': 70, 'BI': 70, 'BM': 60, 'SEJ': 40}
-    },
-    {
-        'name': 'Asasi Sains',
-        'cluster': 'Science',
-        'syarat': {'BM': 80, 'MAT': 80, 'SEJ': 40},
-        'syarat_sains': {'BIO': 70, 'FIZ': 70, 'KIM': 70}
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
     },
     {
         'name': 'Diploma in Business Studies',
         'cluster': 'Business',
-        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
+    },
+    {
+        'name': 'Diploma in Business Information Technology',
+        'cluster': 'Business IT',
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
     },
     {
         'name': 'Diploma in International Business',
         'cluster': 'Business',
-        'syarat': {'MAT': 55, 'BI': 55, 'SEJ': 40}
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
+    },
+    {
+        'name': 'Diploma in Creative Digital Media Production',
+        'cluster': 'Creative Arts',
+        'group': 1,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60,
+            'BI_syarat_khas': True
+        }
+    },
+    
+    # ========== GROUP 2 ==========
+    {
+        'name': 'Diploma in Computer Science + SAS Certification',
+        'cluster': 'Computer Science',
+        'group': 2,
+        'syarat': {
+            'BM': 60,  # C
+            'BI': 75,  # B
+            'MAT': 75, # B
+            'SEJ': 40, # E
+            'other_count': 2,
+            'other_min': 60  # C
+        }
+    },
+    {
+        'name': 'Diploma in Marketing + CPM Certification',
+        'cluster': 'Marketing',
+        'group': 2,
+        'syarat': {
+            'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
+            'other_count': 2,
+            'other_min': 60
+        }
+    },
+    
+    # ========== GROUP 3 ==========
+    {
+        'name': 'Diploma in Computer Science',
+        'cluster': 'Computer Science',
+        'group': 3,
+        'syarat': {
+            'BM': 60,  # C
+            'MAT': 60, # C
+            'SEJ': 40, # E
+            'BI_min': 40, # E
+            'other_count': 3,
+            'other_min': 60  # C
+        }
+    },
+    
+    # ========== GROUP 4 ==========
+    {
+        'name': 'Diploma in English Communication + Translation Certificate',
+        'cluster': 'Language',
+        'group': 4,
+        'syarat': {
+            'BM': 60,  # C
+            'BI': 75,  # B
+            'MAT': 40, # E
+            'SEJ': 40, # E
+            'other_count': 1,
+            'other_min': 60  # C
+        }
+    },
+    
+    # ========== GROUP 5 ==========
+    {
+        'name': 'Diploma in Accounting',
+        'cluster': 'Accounting',
+        'group': 5,
+        'syarat': {
+            'BM': 60,  # C
+            'MAT': 60, # C
+            'SEJ': 40, # E
+            'BI_min': 40, # E
+            'other_count': 1,
+            'other_min': 60  # C
+        }
+    },
+    
+    # ========== GROUP 6 ==========
+    {
+        'name': 'Diploma in Accounting + SAP Certification',
+        'cluster': 'Accounting',
+        'group': 6,
+        'syarat': {
+            'BM': 60,  # C
+            'BI': 75,  # B
+            'MAT': 75, # B
+            'SEJ': 40, # E
+            'other_count': 1,
+            'other_min': 60  # C
+        }
+    },
+    
+    # ========== GROUP 7 ==========
+    {
+        'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
+        'cluster': 'Engineering',
+        'group': 7,
+        'syarat': {
+            'BM': 85,  # A-
+            'MAT': 85, # A-
+            'M-T': 75, # B
+            'SEJ': 40, # E
+            'sains_min': 75,  # Fizik atau Kimia ≥ B
+            'other_count': 2,
+            'other_min': 75  # B
+        }
+    },
+    {
+        'name': 'Asasi Kejuruteraan & Teknologi (UMP)',
+        'cluster': 'Engineering',
+        'group': 7,
+        'syarat': {
+            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
+            'sains_min': 75,
+            'other_count': 2,
+            'other_min': 75
+        }
     }
 ]
 
 # ============================================
-# FUNGSI SEMAK KELAYAKAN
+# FUNGSI SEMAK KELAYAKAN (VERSI BARU)
 # ============================================
 def is_eligible(row, program, debug=False):
     results = []
+    syarat = program.get('syarat', {})
     
+    # Semak Sejarah
     sejarah = grade_to_numeric(row.get('SEJ', 0))
-    if sejarah < 40:
-        if debug: results.append(f"❌ Sejarah: {sejarah} < 40")
+    if sejarah < syarat.get('SEJ', 0):
+        if debug: results.append(f"❌ Sejarah: {sejarah} < {syarat.get('SEJ', 0)}")
         return False, results
     
-    syarat = program.get('syarat', {})
-    for subj, min_nilai in syarat.items():
-        if subj in ['BM', 'BI', 'MAT', 'M-T', 'ACC']:
-            nilai = grade_to_numeric(row.get(subj, 0))
-            if nilai < min_nilai:
-                if debug: results.append(f"❌ {subj}: {nilai} < {min_nilai}")
-                return False, results
-            else:
-                if debug: results.append(f"✅ {subj}: {nilai} ≥ {min_nilai}")
+    # Semak BM
+    bm = grade_to_numeric(row.get('BM', 0))
+    if bm < syarat.get('BM', 0):
+        if debug: results.append(f"❌ BM: {bm} < {syarat.get('BM', 0)}")
+        return False, results
     
-    if 'syarat_sains' in program:
-        sains_ok = False
-        for subj, min_nilai in program['syarat_sains'].items():
-            nilai = grade_to_numeric(row.get(subj, 0))
-            if nilai >= min_nilai:
-                sains_ok = True
-                if debug: results.append(f"✅ Sains ({subj}): {nilai} ≥ {min_nilai}")
-                break
-        if not sains_ok:
-            if debug: results.append(f"❌ Tiada sains mencapai syarat")
+    # Semak Math
+    math = grade_to_numeric(row.get('MAT', 0))
+    if math < syarat.get('MAT', 0):
+        if debug: results.append(f"❌ MAT: {math} < {syarat.get('MAT', 0)}")
+        return False, results
+    
+    # Semak BI (jika ada syarat khas)
+    bi = grade_to_numeric(row.get('BI', 0))
+    if 'BI' in syarat:
+        if bi < syarat['BI']:
+            if debug: results.append(f"❌ BI: {bi} < {syarat['BI']}")
+            return False, results
+    elif 'BI_min' in syarat:
+        if bi < syarat['BI_min']:
+            if debug: results.append(f"❌ BI: {bi} < {syarat['BI_min']}")
+            return False, results
+        # Syarat khas untuk BI E/D
+        if syarat.get('BI_syarat_khas', False):
+            if bi <= 50:  # E atau D
+                if debug: results.append("⚠️ BI E/D - layak tapi perlu program pra-diploma")
+    
+    # Semak M-T (jika ada)
+    if 'M-T' in syarat:
+        mt = grade_to_numeric(row.get('M-T', 0))
+        if mt < syarat['M-T']:
+            if debug: results.append(f"❌ M-T: {mt} < {syarat['M-T']}")
             return False, results
     
-    if 'syarat_islam' in program:
-        islam_ok = False
-        for subj, min_nilai in program['syarat_islam'].items():
-            nilai = grade_to_numeric(row.get(subj, 0))
-            if nilai >= min_nilai:
-                islam_ok = True
-                if debug: results.append(f"✅ Islam ({subj}): {nilai} ≥ {min_nilai}")
-                break
-        if not islam_ok:
-            if debug: results.append(f"❌ Tiada subjek islam mencapai syarat")
+    # Semak sains_min (Fizik atau Kimia)
+    if 'sains_min' in syarat:
+        fizik = grade_to_numeric(row.get('FIZ', 0))
+        kim = grade_to_numeric(row.get('KIM', 0))
+        if max(fizik, kim) < syarat['sains_min']:
+            if debug: results.append(f"❌ Fizik/Kimia: {max(fizik, kim)} < {syarat['sains_min']}")
             return False, results
     
-    if debug and not results:
+    # Semak other subjects
+    if 'other_count' in syarat:
+        # Senarai subjek lain (semua kecuali yang wajib)
+        wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
+        other_subjects = [col for col in row.index if col not in wajib and col in SUBJECT_NAMES]
+        
+        other_pass = 0
+        for subj in other_subjects:
+            if grade_to_numeric(row[subj]) >= syarat['other_min']:
+                other_pass += 1
+        
+        if other_pass < syarat['other_count']:
+            if debug: results.append(f"❌ Hanya {other_pass}/{syarat['other_count']} subjek lain ≥ {syarat['other_min']}")
+            return False, results
+    
+    if debug:
         results.append("✅ Semua syarat dipenuhi")
     
     return True, results
 
 # ============================================
-# FUNGSI HITUNG SKOR
+# FUNGSI HITUNG SKOR KESESUAIAN
 # ============================================
 def hitung_skor(row, program):
     skor = 0
@@ -200,14 +382,14 @@ def hitung_skor(row, program):
     subjek_count = 0
     subjek_total = 0
     
-    all_syarat = []
-    all_syarat.extend(program.get('syarat', {}).keys())
-    if 'syarat_sains' in program:
-        all_syarat.extend(program['syarat_sains'].keys())
-    if 'syarat_islam' in program:
-        all_syarat.extend(program['syarat_islam'].keys())
+    # Semua subjek dalam syarat
+    syarat = program.get('syarat', {})
+    all_subjek = []
+    for key in syarat:
+        if key in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
+            all_subjek.append(key)
     
-    unique_subjek = list(set(all_syarat))
+    unique_subjek = list(set(all_subjek))
     
     for subj in unique_subjek:
         if subj in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
@@ -331,6 +513,7 @@ if cari_button:
                         program_scores.append({
                             'name': prog['name'],
                             'cluster': prog['cluster'],
+                            'group': prog['group'],
                             'score': skor,
                             'in_original': in_original
                         })
@@ -365,6 +548,7 @@ if cari_button:
                         <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {color}; border-radius: 3px;'>
                             <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
                             <span style='font-size: 0.9em; color: {color}'><b>Kesesuaian: {prog['score']}%</b></span>
+                            <span style='font-size: 0.8em; color: gray;'>Kumpulan {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
