@@ -81,7 +81,7 @@ def get_best_in_list(row, subject_list):
 ALL_PROGRAMS = [
     # ========== GROUP 1 ==========
     {
-        'name': 'Diploma in Integrated Logistics Management + CILT',
+        'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport',
         'cluster': 'Logistics',
         'group': 1,
         'syarat': {
@@ -169,7 +169,7 @@ ALL_PROGRAMS = [
     
     # ========== GROUP 2 ==========
     {
-        'name': 'Diploma in Computer Science + SAS Certification',
+        'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification',
         'cluster': 'Computer Science',
         'group': 2,
         'syarat': {
@@ -182,7 +182,7 @@ ALL_PROGRAMS = [
         }
     },
     {
-        'name': 'Diploma in Marketing + CPM Certification',
+        'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification',
         'cluster': 'Marketing',
         'group': 2,
         'syarat': {
@@ -209,7 +209,7 @@ ALL_PROGRAMS = [
     
     # ========== GROUP 4 ==========
     {
-        'name': 'Diploma in English Communication + Translation Certificate',
+        'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM',
         'cluster': 'Language',
         'group': 4,
         'syarat': {
@@ -239,7 +239,7 @@ ALL_PROGRAMS = [
     
     # ========== GROUP 6 ==========
     {
-        'name': 'Diploma in Accounting + SAP Certification',
+        'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification',
         'cluster': 'Accounting',
         'group': 6,
         'syarat': {
@@ -268,7 +268,7 @@ ALL_PROGRAMS = [
         }
     },
     {
-        'name': 'Asasi Kejuruteraan & Teknologi (UMP)',
+        'name': 'Asasi Kejuruteraan & Teknologi (UMPSA)',
         'cluster': 'Engineering',
         'group': 7,
         'syarat': {
