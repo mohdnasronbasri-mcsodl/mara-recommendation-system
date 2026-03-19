@@ -43,6 +43,84 @@ else:
 
 cari_button = st.sidebar.button("🔍 Cari Pelajar")
 
+# Fungsi grade ke numeric
+def grade_to_numeric(grade):
+    if pd.isna(grade) or grade == 'NA' or grade == '':
+        return 0
+    mapping = {
+        'A': 90, 'A-': 90, 'A+': 90,
+        'B': 75, 'B+': 75, 'B-': 75,
+        'C': 60, 'C+': 60, 'C-': 60,
+        'D': 50,
+        'E': 40
+    }
+    val = str(grade).strip().upper()
+    return mapping.get(val, 0)
+
+# Fungsi untuk buat eligibility scores (simple version)
+def calculate_cluster_scores(row):
+    scores = {}
+    
+    # Engineering score
+    add_math = grade_to_numeric(row.get('M-T', 0))
+    fizik = grade_to_numeric(row.get('FIZ', 0))
+    kim = grade_to_numeric(row.get('KIM', 0))
+    math = grade_to_numeric(row.get('MAT', 0))
+    bm = grade_to_numeric(row.get('BM', 0))
+    
+    if add_math >= 75 and (fizik >= 75 or kim >= 75):
+        scores['Engineering_Score'] = 1.0
+    elif add_math >= 60:
+        scores['Engineering_Score'] = 0.7
+    else:
+        scores['Engineering_Score'] = 0.3
+    
+    # Business score
+    acc = grade_to_numeric(row.get('ACC', 0))
+    commerce = grade_to_numeric(row.get('PT', 0))
+    eko = grade_to_numeric(row.get('EKO', 0))
+    
+    business_subjects = [acc, commerce, eko]
+    if max(business_subjects) >= 75:
+        scores['Business_Score'] = 1.0
+    elif max(business_subjects) >= 60:
+        scores['Business_Score'] = 0.7
+    else:
+        scores['Business_Score'] = 0.3
+    
+    # Science score
+    bio = grade_to_numeric(row.get('BIO', 0))
+    if bio >= 75 or fizik >= 75 or kim >= 75:
+        scores['Science_Score'] = 1.0
+    elif bio >= 60 or fizik >= 60 or kim >= 60:
+        scores['Science_Score'] = 0.7
+    else:
+        scores['Science_Score'] = 0.3
+    
+    # Computer score
+    sk = grade_to_numeric(row.get('SK', 0))
+    if sk >= 75:
+        scores['Computer_Score'] = 1.0
+    elif math >= 75:
+        scores['Computer_Score'] = 0.7
+    else:
+        scores['Computer_Score'] = 0.3
+    
+    # Language score
+    bi = grade_to_numeric(row.get('BI', 0))
+    if bi >= 75:
+        scores['Language_Score'] = 1.0
+    elif bi >= 60:
+        scores['Language_Score'] = 0.7
+    else:
+        scores['Language_Score'] = 0.3
+    
+    # History pass
+    sejarah = grade_to_numeric(row.get('SEJ', 0))
+    scores['History_Pass'] = 1 if sejarah >= 40 else 0
+    
+    return scores
+
 # Main area
 if cari_button:
     with st.spinner("Mencari pelajar..."):
@@ -81,39 +159,46 @@ if cari_button:
                 st.metric("Pendapatan", f"RM {pelajar_terpilih.get('PENDAPATAN', 0):,.2f}")
             
             # ============================================
-            # DEBUG: TENGOK FEATURE NAMES
+            # FEATURE ENGINEERING
             # ============================================
-            with st.expander("🔍 DEBUG: Feature Names dari Model"):
-                st.write(f"Jumlah features: {len(feature_names)}")
-                st.write("10 feature pertama:", feature_names[:10])
             
-            # Sediakan features untuk prediction
-            # Buat dictionary kosong dengan semua feature names
-            feature_dict = {}
+            # 1. Dapatkan cluster scores
+            cluster_scores = calculate_cluster_scores(pelajar_terpilih)
             
-            # Isi dengan data pelajar (kalau ada)
-            for col in pelajar_terpilih.index:
-                if col in feature_names:
-                    feature_dict[col] = pelajar_terpilih[col]
+            # 2. Encode demographic
+            demo_features = {
+                'JANTINA': 1 if pelajar_terpilih.get('JANTINA') == 'P' else 0,
+                'LOKASI': 1 if pelajar_terpilih.get('LOKASI') == 'BANDAR' else 0,
+                'ALIRAN': 1 if pelajar_terpilih.get('ALIRAN') == 'STEM' else 0,
+                'PENDAPATAN': pelajar_terpilih.get('PENDAPATAN', 0)
+            }
             
-            # Isi feature yang tak ada dengan 0
+            # 3. SPM grades (pilih subjek utama)
+            spm_features = {}
+            main_subjects = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK']
+            for subj in main_subjects:
+                spm_features[subj] = grade_to_numeric(pelajar_terpilih.get(subj, 0))
+            
+            # 4. Gabungkan semua features
+            all_features = {}
+            all_features.update(demo_features)
+            all_features.update(spm_features)
+            all_features.update(cluster_scores)
+            
+            # 5. Isi feature yang missing dengan 0
             for f in feature_names:
-                if f not in feature_dict:
-                    feature_dict[f] = 0
+                if f not in all_features:
+                    all_features[f] = 0
             
-            # DEBUG: tengok feature yang missing
-            missing_features = [f for f in feature_names if f not in pelajar_terpilih.index]
-            with st.expander("🔍 DEBUG: Feature Analysis"):
-                st.write(f"Feature dalam data: {len([c for c in pelajar_terpilih.index if c in feature_names])}")
-                st.write(f"Feature diisi manual: {len(feature_dict)}")
-                st.write(f"Feature missing (diisi 0): {len(missing_features)}")
-                if len(missing_features) > 0:
-                    st.write("10 missing features pertama:", missing_features[:10])
+            # DEBUG info
+            with st.expander("🔍 DEBUG: Features"):
+                st.write(f"Total features created: {len(all_features)}")
+                st.write("Cluster scores:", cluster_scores)
+                st.write("Demo features:", demo_features)
+                st.write("SPM grades:", {k: v for k, v in spm_features.items() if v > 0})
             
             # Buat dataframe
-            feature_df = pd.DataFrame([feature_dict])
-            
-            # Pastikan kolom order sama
+            feature_df = pd.DataFrame([all_features])
             feature_df = feature_df[feature_names]
             
             # Predict
@@ -136,45 +221,22 @@ if cari_button:
             with col_b:
                 st.subheader("🎯 Program Dicadangkan")
                 
-                # Fungsi grade to numeric
-                def grade_to_numeric(g):
-                    if pd.isna(g) or g == 'NA' or g == 0:
-                        return 0
-                    mapping = {
-                        'A': 90, 'A-': 90,
-                        'B+': 75, 'B': 75, 'B-': 75,
-                        'C+': 60, 'C': 60, 'C-': 60,
-                        'D': 50,
-                        'E': 40
-                    }
-                    val = str(g).strip().upper()
-                    return mapping.get(val, 0)
-                
-                # Dapatkan gred
-                add_math = grade_to_numeric(pelajar_terpilih.get('M-T', 0))
-                physics = grade_to_numeric(pelajar_terpilih.get('FIZ', 0))
-                chemistry = grade_to_numeric(pelajar_terpilih.get('KIM', 0))
-                accounting = grade_to_numeric(pelajar_terpilih.get('ACC', 0))
-                bi = grade_to_numeric(pelajar_terpilih.get('BI', 0))
-                bm = grade_to_numeric(pelajar_terpilih.get('BM', 0))
-                math = grade_to_numeric(pelajar_terpilih.get('MAT', 0))
-                
                 recommendations = []
                 
                 # Engineering
-                if add_math >= 75 and (physics >= 75 or chemistry >= 75):
+                if cluster_scores.get('Engineering_Score', 0) >= 0.7:
                     recommendations.append("🏗️ **Engineering & Technology**\n- Asasi Kejuruteraan & Teknologi (UTM)\n- Asasi Kejuruteraan & Teknologi (UMP)")
                 
                 # Accounting
-                if accounting >= 60:
+                if cluster_scores.get('Business_Score', 0) >= 0.7:
                     recommendations.append("💰 **Accounting & Finance**\n- Diploma in Accounting\n- Diploma in Accounting + SAP")
                 
                 # Language
-                if bi >= 75 and bm >= 75:
+                if cluster_scores.get('Language_Score', 0) >= 0.7:
                     recommendations.append("🗣️ **Language & Communication**\n- Diploma in English Communication")
                 
                 # Business
-                if math >= 60 and bi >= 60:
+                if cluster_scores.get('Business_Score', 0) >= 0.6:
                     recommendations.append("📊 **Business & Management**\n- Diploma in Business Studies\n- Diploma in International Business")
                 
                 if recommendations:
