@@ -58,24 +58,6 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# FUNGSI BANTUAN
-# ============================================
-def count_subjects_ge(row, subjects, min_nilai):
-    count = 0
-    for subj in subjects:
-        if subj in row.index:
-            if grade_to_numeric(row[subj]) >= min_nilai:
-                count += 1
-    return count
-
-def get_best_in_list(row, subject_list):
-    best = 0
-    for subj in subject_list:
-        if subj in row.index:
-            best = max(best, grade_to_numeric(row[subj]))
-    return best
-
-# ============================================
 # SENARAI PROGRAM DENGAN SYARAT TERKINI
 # ============================================
 ALL_PROGRAMS = [
@@ -85,13 +67,11 @@ ALL_PROGRAMS = [
         'cluster': 'Logistics',
         'group': 1,
         'syarat': {
-            'BM': 60,  # C
-            'MAT': 40, # E
-            'SEJ': 40, # E
-            'BI_min': 40,  # E (tapi ada syarat khas)
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
             'other_count': 2,
-            'other_min': 60,  # C
-            'BI_syarat_khas': True  # E/D kena pra-diploma
+            'other_min': 60,
+            'BI_syarat_khas': True
         }
     },
     {
@@ -173,12 +153,9 @@ ALL_PROGRAMS = [
         'cluster': 'Computer Science',
         'group': 2,
         'syarat': {
-            'BM': 60,  # C
-            'BI': 75,  # B
-            'MAT': 75, # B
-            'SEJ': 40, # E
+            'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
             'other_count': 2,
-            'other_min': 60  # C
+            'other_min': 60
         }
     },
     {
@@ -198,12 +175,10 @@ ALL_PROGRAMS = [
         'cluster': 'Computer Science',
         'group': 3,
         'syarat': {
-            'BM': 60,  # C
-            'MAT': 60, # C
-            'SEJ': 40, # E
-            'BI_min': 40, # E
+            'BM': 60, 'MAT': 60, 'SEJ': 40,
+            'BI_min': 40,
             'other_count': 3,
-            'other_min': 60  # C
+            'other_min': 60
         }
     },
     
@@ -213,12 +188,9 @@ ALL_PROGRAMS = [
         'cluster': 'Language',
         'group': 4,
         'syarat': {
-            'BM': 60,  # C
-            'BI': 75,  # B
-            'MAT': 40, # E
-            'SEJ': 40, # E
+            'BM': 60, 'BI': 75, 'MAT': 40, 'SEJ': 40,
             'other_count': 1,
-            'other_min': 60  # C
+            'other_min': 60
         }
     },
     
@@ -228,12 +200,10 @@ ALL_PROGRAMS = [
         'cluster': 'Accounting',
         'group': 5,
         'syarat': {
-            'BM': 60,  # C
-            'MAT': 60, # C
-            'SEJ': 40, # E
-            'BI_min': 40, # E
+            'BM': 60, 'MAT': 60, 'SEJ': 40,
+            'BI_min': 40,
             'other_count': 1,
-            'other_min': 60  # C
+            'other_min': 60
         }
     },
     
@@ -243,12 +213,9 @@ ALL_PROGRAMS = [
         'cluster': 'Accounting',
         'group': 6,
         'syarat': {
-            'BM': 60,  # C
-            'BI': 75,  # B
-            'MAT': 75, # B
-            'SEJ': 40, # E
+            'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
             'other_count': 1,
-            'other_min': 60  # C
+            'other_min': 60
         }
     },
     
@@ -258,13 +225,10 @@ ALL_PROGRAMS = [
         'cluster': 'Engineering',
         'group': 7,
         'syarat': {
-            'BM': 85,  # A-
-            'MAT': 85, # A-
-            'M-T': 75, # B
-            'SEJ': 40, # E
-            'sains_min': 75,  # Fizik atau Kimia ≥ B
+            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
+            'sains_min': 75,
             'other_count': 2,
-            'other_min': 75  # B
+            'other_min': 75
         }
     },
     {
@@ -281,31 +245,27 @@ ALL_PROGRAMS = [
 ]
 
 # ============================================
-# FUNGSI SEMAK KELAYAKAN (VERSI BARU)
+# FUNGSI SEMAK KELAYAKAN
 # ============================================
 def is_eligible(row, program, debug=False):
     results = []
     syarat = program.get('syarat', {})
     
-    # Semak Sejarah
     sejarah = grade_to_numeric(row.get('SEJ', 0))
     if sejarah < syarat.get('SEJ', 0):
         if debug: results.append(f"❌ Sejarah: {sejarah} < {syarat.get('SEJ', 0)}")
         return False, results
     
-    # Semak BM
     bm = grade_to_numeric(row.get('BM', 0))
     if bm < syarat.get('BM', 0):
         if debug: results.append(f"❌ BM: {bm} < {syarat.get('BM', 0)}")
         return False, results
     
-    # Semak Math
     math = grade_to_numeric(row.get('MAT', 0))
     if math < syarat.get('MAT', 0):
         if debug: results.append(f"❌ MAT: {math} < {syarat.get('MAT', 0)}")
         return False, results
     
-    # Semak BI (jika ada syarat khas)
     bi = grade_to_numeric(row.get('BI', 0))
     if 'BI' in syarat:
         if bi < syarat['BI']:
@@ -315,19 +275,15 @@ def is_eligible(row, program, debug=False):
         if bi < syarat['BI_min']:
             if debug: results.append(f"❌ BI: {bi} < {syarat['BI_min']}")
             return False, results
-        # Syarat khas untuk BI E/D
-        if syarat.get('BI_syarat_khas', False):
-            if bi <= 50:  # E atau D
-                if debug: results.append("⚠️ BI E/D - layak tapi perlu program pra-diploma")
+        if syarat.get('BI_syarat_khas', False) and bi <= 50:
+            if debug: results.append("⚠️ BI E/D - layak tapi perlu program pra-diploma")
     
-    # Semak M-T (jika ada)
     if 'M-T' in syarat:
         mt = grade_to_numeric(row.get('M-T', 0))
         if mt < syarat['M-T']:
             if debug: results.append(f"❌ M-T: {mt} < {syarat['M-T']}")
             return False, results
     
-    # Semak sains_min (Fizik atau Kimia)
     if 'sains_min' in syarat:
         fizik = grade_to_numeric(row.get('FIZ', 0))
         kim = grade_to_numeric(row.get('KIM', 0))
@@ -335,17 +291,13 @@ def is_eligible(row, program, debug=False):
             if debug: results.append(f"❌ Fizik/Kimia: {max(fizik, kim)} < {syarat['sains_min']}")
             return False, results
     
-    # Semak other subjects
     if 'other_count' in syarat:
-        # Senarai subjek lain (semua kecuali yang wajib)
         wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
         other_subjects = [col for col in row.index if col not in wajib and col in SUBJECT_NAMES]
-        
         other_pass = 0
         for subj in other_subjects:
             if grade_to_numeric(row[subj]) >= syarat['other_min']:
                 other_pass += 1
-        
         if other_pass < syarat['other_count']:
             if debug: results.append(f"❌ Hanya {other_pass}/{syarat['other_count']} subjek lain ≥ {syarat['other_min']}")
             return False, results
@@ -356,7 +308,7 @@ def is_eligible(row, program, debug=False):
     return True, results
 
 # ============================================
-# FUNGSI HITUNG SKOR KESESUAIAN
+# FUNGSI HITUNG SKOR
 # ============================================
 def hitung_skor(row, program):
     skor = 0
@@ -381,8 +333,6 @@ def hitung_skor(row, program):
     # Subjek (80%)
     subjek_count = 0
     subjek_total = 0
-    
-    # Semua subjek dalam syarat
     syarat = program.get('syarat', {})
     all_subjek = []
     for key in syarat:
@@ -425,7 +375,6 @@ cari_button = st.sidebar.button("🔍 Cari Pelajar")
 # ============================================
 if cari_button:
     with st.spinner("Mencari pelajar..."):
-        # VALIDASI INPUT TAK KOSONG
         if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
             st.error("❌ Sila masukkan NOKP")
             st.stop()
@@ -433,11 +382,9 @@ if cari_button:
             st.error("❌ Sila masukkan nama")
             st.stop()
         
-        # CARIAN
         if cari_melalui == "NOKP":
             pelajar = df[df['NOKP'].astype(str).str.contains(nokp_input, na=False)]
         else:
-            # Handle NaN dalam kolum NAMA
             df['NAMA'] = df['NAMA'].fillna('')
             pelajar = df[df['NAMA'].str.contains(nama_input, case=False, na=False)]
         
@@ -446,7 +393,6 @@ if cari_button:
         else:
             row = pelajar.iloc[0]
             
-            # DEBUG GRED
             with st.expander("🔍 Gred Penting"):
                 penting = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI']
                 data = {}
@@ -462,8 +408,6 @@ if cari_button:
             
             with col_kiri:
                 st.markdown("### 👤 Profil Pelajar")
-                
-                # PROFIL DALAM TABLE (TANPA LABEL)
                 profil_items = []
                 profil_items.append(f"<tr><td style='text-align:left'>{row['NOKP']}</td></tr>")
                 profil_items.append(f"<tr><td style='text-align:left'>{row['NAMA']}</td></tr>")
@@ -480,9 +424,8 @@ if cari_button:
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # SUBJEK SPM (HANYA GRED, CENTER)
+                # SUBJEK SPM
                 st.markdown("### 📚 Subjek SPM")
-                
                 subject_items = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
@@ -502,6 +445,21 @@ if cari_button:
                     """, unsafe_allow_html=True)
                 else:
                     st.info("Tiada data subjek")
+                
+                # PERINCIAN SKOR (DIPINDAHKAN KE SINI)
+                st.markdown("### 📊 Perincian Skor")
+                st.markdown("""
+                **Komponen skor:**
+                - Demografi: 10%
+                - Pendapatan: 10% (B40 > T20)
+                - Subjek: 80% (purata subjek berkaitan)
+                - Bonus: +15% jika dalam pilihan asal
+                
+                **Kelayakan:**
+                - ≥80%: Sangat sesuai
+                - 60-79%: Sederhana sesuai
+                - <60%: Kurang sesuai
+                """)
             
             with col_kanan:
                 st.markdown("### 🎯 5 Program Terbaik")
@@ -512,7 +470,6 @@ if cari_button:
                         pilihan_asal.append(str(row[pil]).strip())
                 
                 program_scores = []
-                
                 for prog in ALL_PROGRAMS:
                     eligible, _ = is_eligible(row, prog, debug=False)
                     if eligible:
@@ -520,7 +477,6 @@ if cari_button:
                         in_original = any(prog['name'].lower() in p.lower() for p in pilihan_asal)
                         if in_original:
                             skor = min(skor + 15, 100)
-                        
                         program_scores.append({
                             'name': prog['name'],
                             'cluster': prog['cluster'],
@@ -533,7 +489,6 @@ if cari_button:
                 
                 if len(program_scores) == 0:
                     st.warning("⚠️ Tiada program yang layak")
-                    
                     with st.expander("🔍 Debug: Semua program"):
                         for prog in ALL_PROGRAMS:
                             eligible, reasons = is_eligible(row, prog, debug=True)
@@ -563,23 +518,8 @@ if cari_button:
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    with st.expander("📊 Perincian Skor"):
-                        st.markdown("""
-                        **Komponen skor:**
-                        - Demografi: 10%
-                        - Pendapatan: 10% (B40 > T20)
-                        - Subjek: 80% (purata subjek berkaitan)
-                        - Bonus: +15% jika dalam pilihan asal
-                        
-                        **Kelayakan:**
-                        - ≥80%: Sangat sesuai
-                        - 60-79%: Sederhana sesuai
-                        - <60%: Kurang sesuai
-                        """)
-                    
-                    # PILIHAN ASAL DALAM TABLE
+                    # PILIHAN ASAL
                     st.markdown("### 📋 Pilihan Asal Pelajar")
-                    
                     table_rows = []
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
@@ -595,7 +535,7 @@ if cari_button:
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # PROGRAM DITAWAR (HIJAU)
+                    # PROGRAM DITAWAR
                     if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                         program_ditawar = row['KURSUSJAYA']
                         if program_ditawar != 'TIDAK DITAWARKAN':
