@@ -452,18 +452,18 @@ if cari_button:
             with col_kiri:
                 st.markdown("### 👤 Profil Pelajar")
                 
-                # PROFIL DALAM TABLE
+                # PROFIL DALAM TABLE (TANPA LABEL)
                 profil_items = []
-                profil_items.append(f"<tr><td><b>NOKP</b></td><td>{row['NOKP']}</td></tr>")
-                profil_items.append(f"<tr><td><b>Nama</b></td><td>{row['NAMA']}</td></tr>")
-                profil_items.append(f"<tr><td><b>Jantina</b></td><td>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>")
-                profil_items.append(f"<tr><td><b>Lokasi</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td><b>Aliran</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td><b>Pendapatan</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
+                profil_items.append(f"<tr><td>{row['NOKP']}</td></tr>")
+                profil_items.append(f"<tr><td>{row['NAMA']}</td></tr>")
+                profil_items.append(f"<tr><td>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>")
+                profil_items.append(f"<tr><td>{row.get('LOKASI', 'N/A')}</td></tr>")
+                profil_items.append(f"<tr><td>{row.get('ALIRAN', 'N/A')}</td></tr>")
+                profil_items.append(f"<tr><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
                 
                 st.markdown(f"""
                 <div style='max-height: 300px; overflow-y: auto; margin-bottom: 20px;'>
-                <table>
+                <table style='width:100%'>
                     {''.join(profil_items)}
                 </table>
                 </div>
@@ -484,7 +484,7 @@ if cari_button:
                     items_to_show = ''.join(subject_items[:20])
                     st.markdown(f"""
                     <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
-                    <table>
+                    <table style='width:100%'>
                         {items_to_show}
                     </table>
                     </div>
@@ -566,11 +566,30 @@ if cari_button:
                         - <60%: Kurang sesuai
                         """)
                     
-                    with st.expander("📋 Pilihan Asal Pelajar"):
-                        for i, p in enumerate(pilihan_asal, 1):
-                            in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
-                            status = "✓ Dalam cadangan" if in_top5 else "✗ Tiada dalam cadangan"
-                            st.write(f"**PIL{i}:** {p} - {status}")
-                        
-                        if 'KURSUSJAYA' in row.index:
-                            st.write(f"**Status sebenar:** {row['KURSUSJAYA']}")
+                    # PILIHAN ASAL DALAM TABLE
+                    st.markdown("### 📋 Pilihan Asal Pelajar")
+                    
+                    table_rows = []
+                    for i, p in enumerate(pilihan_asal, 1):
+                        in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
+                        status = "✓" if in_top5 else "✗"
+                        table_rows.append(f"<tr><td>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
+                    
+                    st.markdown(f"""
+                    <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
+                    <table style='width:100%'>
+                        <tr><th>Pilihan</th><th>Program</th><th>Cadangan</th></tr>
+                        {''.join(table_rows)}
+                    </table>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # PROGRAM DITAWAR (HIJAU)
+                    if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
+                        program_ditawar = row['KURSUSJAYA']
+                        if program_ditawar != 'TIDAK DITAWARKAN':
+                            st.markdown(f"""
+                            <div style='background-color: #28a745; padding: 10px; border-radius: 5px; margin-top: 10px;'>
+                                <span style='color: white; font-weight: bold;'>✅ Program Ditawar: {program_ditawar}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
