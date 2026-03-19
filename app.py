@@ -279,9 +279,60 @@ def recommend_programs(row):
     eko = grade_to_numeric(row.get('EKO', 0))
     sejarah = grade_to_numeric(row.get('SEJ', 0))
     
+    # SUBJEK ISLAM
+    pi = grade_to_numeric(row.get('PI', 0))  # Pendidikan Islam
+    pqs = grade_to_numeric(row.get('PQS', 0))  # Pendidikan Al-Quran & Al-Sunnah
+    psi = grade_to_numeric(row.get('PSI', 0))  # Pendidikan Syariah Islamiah
+    tsi = grade_to_numeric(row.get('TSI', 0))  # Tasawwur Islam
+    hq = grade_to_numeric(row.get('HQ', 0))  # Hifz Al-Quran
+    mq = grade_to_numeric(row.get('MQ', 0))  # Maharat Al-Quran
+    arab = grade_to_numeric(row.get('BAT', 0))  # Bahasa Arab
+    
     # Syarat wajib: Sejarah lulus
     if sejarah < 40:
         return [{"cluster": "Tidak Layak", "programs": [], "reasons": ["Sejarah gagal - tidak layak ke mana-mana program"]}]
+    
+    # ========== PROGRAM ISLAM ==========
+    
+    # ---------- DIPLOMA IN HALAL INDUSTRY + HALAL EXECUTIVE CERTIFICATION ----------
+    # Syarat: Pendidikan Islam ≥ B (75) ATAU PQS/PSI ≥ B, BM ≥ C (60), BI ≥ C (60)
+    halal_programs = []
+    halal_reasons = []
+    islam_score = max([pi, pqs, psi, tsi]) if max([pi, pqs, psi, tsi]) > 0 else 0
+    
+    if islam_score >= 75 and bm >= 60 and bi >= 60:
+        halal_programs.append("Diploma in Halal Industry + Halal Executive Certification")
+        halal_reasons.append(f"Pendidikan Islam ({row.get('PI', 'N/A')}) / PQS/PSI ≥ B, BM & BI ≥ C")
+    elif islam_score >= 60 and bm >= 60:
+        halal_programs.append("Diploma in Halal Industry (Pertimbangan Khas)")
+        halal_reasons.append(f"Pendidikan Islam/PQS/PSI sederhana, perlu semakan tambahan")
+    
+    if halal_programs:
+        recommendations.append({
+            'cluster': 'Halal Management',
+            'programs': halal_programs,
+            'reasons': halal_reasons,
+            'score': 'Layak' if islam_score >= 75 else 'Pertimbangan'
+        })
+    
+    # ---------- DIPLOMA IN ISLAMIC FINANCE + ASSOCIATE QUALIFICATION ----------
+    # Syarat: Math ≥ C (60), Pendidikan Islam ≥ C (60), BM ≥ C (60)
+    islamic_finance_programs = []
+    islamic_finance_reasons = []
+    
+    if math >= 60 and islam_score >= 60 and bm >= 60:
+        islamic_finance_programs.append("Diploma in Islamic Finance + Associate Qualification")
+        islamic_finance_reasons.append(f"Math ≥ C, Pendidikan Islam ≥ C, BM ≥ C")
+    
+    if islamic_finance_programs:
+        recommendations.append({
+            'cluster': 'Islamic Finance',
+            'programs': islamic_finance_programs,
+            'reasons': islamic_finance_reasons,
+            'score': 'Layak'
+        })
+    
+    # ========== PROGRAM KONVENSIONAL ==========
     
     # ---------- DIPLOMA IN ENGLISH COMMUNICATION ----------
     # Syarat: BI ≥ B (75), BM ≥ C (60), Sejarah lulus
@@ -388,13 +439,47 @@ def recommend_programs(row):
 # FUNGSI UNTUK PAPAR SUBJEK
 # ============================================
 def display_subjects(row):
-    # Cari semua kolum subjek (yang ada dalam SUBJECT_NAMES)
-    subject_cols = [col for col in row.index if col in SUBJECT_NAMES and pd.notna(row.get(col)) and row.get(col) != 'NA' and row.get(col) != '']
+    # Cari semua kolum subjek (yang ada dalam SUBJECT_NAMES dan ada nilai)
+    subject_cols = []
+    for col in row.index:
+        if col in SUBJECT_NAMES:
+            val = row.get(col)
+            if pd.notna(val) and val != 'NA' and val != '':
+                subject_cols.append(col)
     
     # Susun ikut abjad
     subject_cols.sort()
     
     return subject_cols
+
+# ============================================
+# FUNGSI UNTUK SEMAK PADANAN DENGAN PILIHAN ASAL
+# ============================================
+def check_original_choices(row, recommendations):
+    original_choices = {
+        'PIL1': row.get('PIL1', ''),
+        'PIL2': row.get('PIL2', ''),
+        'PIL3': row.get('PIL3', '')
+    }
+    
+    # Senarai program yang kita cadangkan
+    recommended_programs = []
+    for rec in recommendations:
+        if rec['cluster'] not in ['Tiada', 'Tidak Layak']:
+            recommended_programs.extend(rec['programs'])
+    
+    # Semak padanan
+    matches = {}
+    for key, prog in original_choices.items():
+        if pd.notna(prog) and prog != '':
+            # Cari dalam cadangan
+            match_found = any(prog.lower() in rp.lower() for rp in recommended_programs)
+            matches[key] = {
+                'program': prog,
+                'match': match_found
+            }
+    
+    return matches, original_choices
 
 # Main area
 if cari_button:
@@ -470,17 +555,45 @@ if cari_button:
             # Dapatkan cadangan berdasarkan syarat sebenar
             recommendations = recommend_programs(pelajar_terpilih)
             
+            # Semak padanan dengan pilihan asal
+            matches, original_choices = check_original_choices(pelajar_terpilih, recommendations)
+            
+            # Paparan utama cadangan
             if recommendations and recommendations[0]['cluster'] != 'Tiada' and recommendations[0]['cluster'] != 'Tidak Layak':
+                # Paparan dalam bentuk grid
                 for rec in recommendations:
-                    with st.expander(f"**{rec['cluster']}**"):
+                    with st.expander(f"**{rec['cluster']}** ({rec['score']})"):
                         for prog in rec['programs']:
-                            st.write(f"✅ {prog}")
+                            # Tandakan jika program ini dalam pilihan asal
+                            in_original = False
+                            for key, prog_info in matches.items():
+                                if prog_info['match'] and prog.lower() in prog_info['program'].lower():
+                                    in_original = True
+                                    break
+                            
+                            if in_original:
+                                st.write(f"✅ **{prog}** ⭐ (Dalam pilihan asal)")
+                            else:
+                                st.write(f"✅ {prog}")
+                        
                         if rec['reasons']:
                             st.caption("📌 " + ", ".join(rec['reasons']))
             elif recommendations and recommendations[0]['cluster'] == 'Tidak Layak':
                 st.error("❌ " + recommendations[0]['reasons'][0])
             else:
                 st.warning("Tiada cadangan program yang memenuhi syarat minimum.")
+            
+            # ============================================
+            # PAPAR PILIHAN PROGRAM ASAL
+            # ============================================
+            with st.expander("📋 Pilihan Program Asal Pelajar"):
+                for key, prog in original_choices.items():
+                    if pd.notna(prog) and prog != '':
+                        match_status = "✓ Dalam cadangan" if matches[key]['match'] else "✗ Tiada dalam cadangan"
+                        st.write(f"**{key}:** {prog} - {match_status}")
+                
+                if 'KURSUSJAYA' in pelajar_terpilih.index:
+                    st.write(f"**Status sebenar:** {pelajar_terpilih['KURSUSJAYA']}")
             
             # ============================================
             # PAPAR PREDIKSI MODEL (optional)
@@ -514,16 +627,6 @@ if cari_button:
                 
                 st.write(f"**Prediksi model:** {'DITAWARKAN' if prediction == 1 else 'TIDAK DITAWARKAN'}")
                 st.write(f"**Kebarangkalian:** {probability:.1%}")
-            
-            # ============================================
-            # PAPAR PILIHAN PROGRAM ASAL
-            # ============================================
-            with st.expander("📋 Pilihan Program Asal Pelajar"):
-                st.write(f"**Pilihan 1:** {pelajar_terpilih.get('PIL1', 'N/A')}")
-                st.write(f"**Pilihan 2:** {pelajar_terpilih.get('PIL2', 'N/A')}")
-                st.write(f"**Pilihan 3:** {pelajar_terpilih.get('PIL3', 'N/A')}")
-                if 'KURSUSJAYA' in pelajar_terpilih.index:
-                    st.write(f"**Status sebenar:** {pelajar_terpilih['KURSUSJAYA']}")
         
         else:
             st.error("❌ Pelajar tidak dijumpai. Sila semak semula NOKP atau nama.")
