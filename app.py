@@ -44,6 +44,62 @@ else:
 cari_button = st.sidebar.button("🔍 Cari Pelajar")
 
 # ============================================
+# KAMUS SUBJEK SPM
+# ============================================
+SUBJECT_NAMES = {
+    'BM': 'Bahasa Melayu',
+    'BI': 'Bahasa Inggeris',
+    'SEJ': 'Sejarah',
+    'PI': 'Pendidikan Islam',
+    'PM': 'Pendidikan Moral',
+    'MAT': 'Matematik',
+    'SNS': 'Sains',
+    'KI': 'Kesusasteraan Inggeris',
+    'LUK': 'Pendidikan Seni Visual',
+    'KMK': 'Kesusasteraan Melayu',
+    'GEO': 'Geografi',
+    'BAT': 'Bahasa Arab',
+    'M-T': 'Matematik Tambahan',
+    'PT': 'Perdagangan',
+    'PGW': 'Pengajian Keusahawanan',
+    'ACC': 'Prinsip Perakaunan',
+    'LKJ': 'LKJ',
+    'PJM': 'PJM',
+    'PJA': 'PJA',
+    'PJE': 'PJE',
+    'RKC': 'RKC',
+    'PNG': 'PNG',
+    'EKO': 'Ekonomi',
+    'AKS': 'AKS',
+    'RT': 'Sains Rumah Tangga',
+    'SK': 'Sains Komputer',
+    'GKT': 'Grafik Komunikasi Teknikal',
+    'FIZ': 'Fizik',
+    'KIM': 'Kimia',
+    'BIO': 'Biologi',
+    'SNT': 'Sains Tambahan',
+    'SS': 'Sains Sukan',
+    'TSI': 'Tasawwur Islam',
+    'PQS': 'Pendidikan Al-Quran & Al-Sunnah',
+    'PSI': 'Pendidikan Syariah Islamiah',
+    'HQ': 'Hifz Al-Quran',
+    'MQ': 'Maharat Al-Quran',
+    'UAD': 'UAD',
+    'AS': 'Asas Sastera',
+    'LAM': 'Bahasa Arab Lanjutan',
+    'MUI': 'MUI',
+    'AWB': 'AWB',
+    'BC': 'Bahasa Cina',
+    'PGN': 'PGN',
+    'LDN': 'LDN',
+    'MUL': 'MUL',
+    'PRT': 'PRT',
+    'HD': 'HD',
+    'RGD': 'RGD',
+    'BK': 'BK'
+}
+
+# ============================================
 # FUNGSI GRADE KE NUMERIK
 # ============================================
 def grade_to_numeric(grade):
@@ -60,114 +116,146 @@ def grade_to_numeric(grade):
     return mapping.get(val, 0)
 
 # ============================================
-# FUNGSI CALCULATE CLUSTER SCORES (VERSI TEPAT)
+# FUNGSI CADANGAN PROGRAM (BERDASARKAN SUBJEK)
 # ============================================
-def calculate_cluster_scores(row):
-    scores = {}
+def recommend_programs(row):
+    recommendations = []
     
-    # ---------- ENGINEERING SCORE ----------
+    # Dapatkan gred dalam numerik
     add_math = grade_to_numeric(row.get('M-T', 0))
     fizik = grade_to_numeric(row.get('FIZ', 0))
     kim = grade_to_numeric(row.get('KIM', 0))
+    bio = grade_to_numeric(row.get('BIO', 0))
     math = grade_to_numeric(row.get('MAT', 0))
     bm = grade_to_numeric(row.get('BM', 0))
-    
-    # Kriteria: Add Math ≥ 75 DAN (Fizik ≥ 75 ATAU Kimia ≥ 75)
-    if add_math >= 75 and (fizik >= 75 or kim >= 75):
-        scores['Engineering_Score'] = 0.9
-        scores['Engineering_Tier'] = 'High'
-    elif add_math >= 60 and (fizik >= 60 or kim >= 60):
-        scores['Engineering_Score'] = 0.6
-        scores['Engineering_Tier'] = 'Medium'
-    else:
-        scores['Engineering_Score'] = 0.3
-        scores['Engineering_Tier'] = 'Low'
-    
-    # ---------- ACCOUNTING SCORE ----------
-    acc = grade_to_numeric(row.get('ACC', 0))
-    math = grade_to_numeric(row.get('MAT', 0))
-    
-    if acc >= 75 and math >= 75:
-        scores['Accounting_Score'] = 0.9
-        scores['Accounting_Tier'] = 'High'
-    elif acc >= 60 or math >= 60:
-        scores['Accounting_Score'] = 0.6
-        scores['Accounting_Tier'] = 'Medium'
-    else:
-        scores['Accounting_Score'] = 0.3
-        scores['Accounting_Tier'] = 'Low'
-    
-    # ---------- LANGUAGE SCORE ----------
     bi = grade_to_numeric(row.get('BI', 0))
-    bm = grade_to_numeric(row.get('BM', 0))
-    arab = grade_to_numeric(row.get('BAT', 0))
-    
-    if bi >= 75 and bm >= 75:
-        scores['Language_Score'] = 0.9
-        scores['Language_Tier'] = 'High'
-    elif bi >= 60 or bm >= 60:
-        scores['Language_Score'] = 0.6
-        scores['Language_Tier'] = 'Medium'
-    else:
-        scores['Language_Score'] = 0.3
-        scores['Language_Tier'] = 'Low'
-    
-    # ---------- BUSINESS SCORE ----------
+    acc = grade_to_numeric(row.get('ACC', 0))
+    sk = grade_to_numeric(row.get('SK', 0))
     commerce = grade_to_numeric(row.get('PT', 0))
     eko = grade_to_numeric(row.get('EKO', 0))
-    math = grade_to_numeric(row.get('MAT', 0))
-    
-    business_subjects = [commerce, eko]
-    best_business = max(business_subjects) if business_subjects else 0
-    
-    if best_business >= 75 and math >= 60:
-        scores['Business_Score'] = 0.9
-        scores['Business_Tier'] = 'High'
-    elif best_business >= 60:
-        scores['Business_Score'] = 0.6
-        scores['Business_Tier'] = 'Medium'
-    else:
-        scores['Business_Score'] = 0.3
-        scores['Business_Tier'] = 'Low'
-    
-    # ---------- COMPUTER SCORE ----------
-    sk = grade_to_numeric(row.get('SK', 0))
-    math = grade_to_numeric(row.get('MAT', 0))
-    bi = grade_to_numeric(row.get('BI', 0))
-    
-    if sk >= 75 and math >= 60 and bi >= 60:
-        scores['Computer_Score'] = 0.9
-        scores['Computer_Tier'] = 'High'
-    elif math >= 75 and bi >= 60:
-        scores['Computer_Score'] = 0.6
-        scores['Computer_Tier'] = 'Medium'
-    else:
-        scores['Computer_Score'] = 0.3
-        scores['Computer_Tier'] = 'Low'
-    
-    # ---------- SCIENCE SCORE ----------
-    bio = grade_to_numeric(row.get('BIO', 0))
-    fizik = grade_to_numeric(row.get('FIZ', 0))
-    kim = grade_to_numeric(row.get('KIM', 0))
-    
-    science_subjects = [b for b in [bio, fizik, kim] if b > 0]
-    best_science = max(science_subjects) if science_subjects else 0
-    
-    if best_science >= 75:
-        scores['Science_Score'] = 0.9
-        scores['Science_Tier'] = 'High'
-    elif best_science >= 60:
-        scores['Science_Score'] = 0.6
-        scores['Science_Tier'] = 'Medium'
-    else:
-        scores['Science_Score'] = 0.3
-        scores['Science_Tier'] = 'Low'
-    
-    # ---------- HISTORY PASS ----------
     sejarah = grade_to_numeric(row.get('SEJ', 0))
-    scores['History_Pass'] = 1 if sejarah >= 40 else 0
     
-    return scores
+    # Syarat wajib: Sejarah lulus
+    if sejarah < 40:
+        return ["❌ **Tidak layak** - Sejarah gagal"]
+    
+    # ---------- Engineering ----------
+    if add_math >= 75 and (fizik >= 75 or kim >= 75):
+        recommendations.append({
+            'cluster': 'Engineering & Technology',
+            'programs': [
+                'Asasi Kejuruteraan & Teknologi (UTM)',
+                'Asasi Kejuruteraan & Teknologi (UMP)'
+            ],
+            'score': 'Tinggi'
+        })
+    elif add_math >= 60 and (fizik >= 60 or kim >= 60):
+        recommendations.append({
+            'cluster': 'Engineering & Technology',
+            'programs': [
+                'Asasi Kejuruteraan & Teknologi (UTM)',
+                'Asasi Kejuruteraan & Teknologi (UMP)'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    # ---------- Accounting ----------
+    if acc >= 75 and math >= 75:
+        recommendations.append({
+            'cluster': 'Accounting & Finance',
+            'programs': [
+                'Diploma in Accounting',
+                'Diploma in Accounting + SAP'
+            ],
+            'score': 'Tinggi'
+        })
+    elif acc >= 60 or math >= 60:
+        recommendations.append({
+            'cluster': 'Accounting & Finance',
+            'programs': [
+                'Diploma in Accounting',
+                'Diploma in Islamic Finance'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    # ---------- Language ----------
+    if bi >= 75 and bm >= 75:
+        recommendations.append({
+            'cluster': 'Language & Communication',
+            'programs': [
+                'Diploma in English Communication'
+            ],
+            'score': 'Tinggi'
+        })
+    elif bi >= 60 or bm >= 60:
+        recommendations.append({
+            'cluster': 'Language & Communication',
+            'programs': [
+                'Diploma in English Communication'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    # ---------- Business ----------
+    business_score = max([commerce, eko]) if max([commerce, eko]) > 0 else 0
+    if business_score >= 75 and math >= 60:
+        recommendations.append({
+            'cluster': 'Business & Management',
+            'programs': [
+                'Diploma in Business Studies',
+                'Diploma in International Business'
+            ],
+            'score': 'Tinggi'
+        })
+    elif business_score >= 60:
+        recommendations.append({
+            'cluster': 'Business & Management',
+            'programs': [
+                'Diploma in Business Studies',
+                'Diploma in Marketing'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    # ---------- Computer Science ----------
+    if sk >= 75 and math >= 60 and bi >= 60:
+        recommendations.append({
+            'cluster': 'Computer Science & IT',
+            'programs': [
+                'Diploma in Computer Science'
+            ],
+            'score': 'Tinggi'
+        })
+    elif math >= 75 and bi >= 60:
+        recommendations.append({
+            'cluster': 'Computer Science & IT',
+            'programs': [
+                'Diploma in Computer Science'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    # ---------- Science ----------
+    science_score = max([bio, fizik, kim]) if max([bio, fizik, kim]) > 0 else 0
+    if science_score >= 75:
+        recommendations.append({
+            'cluster': 'Science',
+            'programs': [
+                'Asasi Sains'
+            ],
+            'score': 'Tinggi'
+        })
+    elif science_score >= 60:
+        recommendations.append({
+            'cluster': 'Science',
+            'programs': [
+                'Asasi Sains'
+            ],
+            'score': 'Sederhana'
+        })
+    
+    return recommendations if recommendations else [{'cluster': 'Tiada', 'programs': ['Tiada cadangan khusus'], 'score': 'Rendah'}]
 
 # Main area
 if cari_button:
@@ -194,24 +282,54 @@ if cari_button:
             else:
                 pelajar_terpilih = pelajar.iloc[0]
             
-            # Tunjukkan maklumat pelajar
+            # ============================================
+            # PAPAR PROFIL PELAJAR
+            # ============================================
+            st.markdown("## 👤 **PROFIL PELAJAR**")
+            
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("NOKP", pelajar_terpilih['NOKP'])
-                st.metric("Jantina", "Perempuan" if pelajar_terpilih.get('JANTINA') == 'P' else "Lelaki")
+                st.markdown(f"**NOKP**")
+                st.info(pelajar_terpilih['NOKP'])
+                st.markdown(f"**Jantina**")
+                st.info("Perempuan" if pelajar_terpilih.get('JANTINA') == 'P' else "Lelaki")
             with col2:
-                st.metric("Nama", pelajar_terpilih['NAMA'])
-                st.metric("Lokasi", pelajar_terpilih.get('LOKASI', 'N/A'))
+                st.markdown(f"**Nama**")
+                st.info(pelajar_terpilih['NAMA'])
+                st.markdown(f"**Lokasi**")
+                st.info(pelajar_terpilih.get('LOKASI', 'N/A'))
             with col3:
-                st.metric("Aliran", pelajar_terpilih.get('ALIRAN', 'N/A'))
-                st.metric("Pendapatan", f"RM {pelajar_terpilih.get('PENDAPATAN', 0):,.2f}")
+                st.markdown(f"**Aliran**")
+                st.info(pelajar_terpilih.get('ALIRAN', 'N/A'))
+                st.markdown(f"**Pendapatan**")
+                st.info(f"RM {pelajar_terpilih.get('PENDAPATAN', 0):,.2f}")
             
             # ============================================
-            # FEATURE ENGINEERING
+            # PAPAR SUBJEK SPM
+            # ============================================
+            st.markdown("## 📚 **SUBJEK SPM**")
+            
+            # Cari semua kolum subjek (yang ada dalam SUBJECT_NAMES)
+            subject_cols = [col for col in pelajar_terpilih.index if col in SUBJECT_NAMES]
+            
+            # Bahagikan kepada 3 column
+            cols = st.columns(3)
+            for i, subj_code in enumerate(subject_cols):
+                with cols[i % 3]:
+                    grade = pelajar_terpilih.get(subj_code, '')
+                    if pd.notna(grade) and grade != 'NA' and grade != '':
+                        st.markdown(f"**{SUBJECT_NAMES[subj_code]}**")
+                        st.info(grade)
+            
+            # ============================================
+            # FEATURE ENGINEERING UNTUK MODEL
             # ============================================
             
-            # 1. Dapatkan cluster scores
-            cluster_scores = calculate_cluster_scores(pelajar_terpilih)
+            # 1. Dapatkan cluster scores (guna fungsi sama)
+            cluster_scores = {}  # Kita tak guna untuk paperan, tapi untuk model
+            for rec in recommend_programs(pelajar_terpilih):
+                if rec['cluster'] != 'Tiada':
+                    cluster_scores[f"{rec['cluster']}_Score"] = 0.9 if rec['score'] == 'Tinggi' else 0.6
             
             # 2. Encode demographic
             demo_features = {
@@ -221,10 +339,9 @@ if cari_button:
                 'PENDAPATAN': pelajar_terpilih.get('PENDAPATAN', 0)
             }
             
-            # 3. SPM grades (pilih subjek utama)
+            # 3. SPM grades (semua subjek)
             spm_features = {}
-            main_subjects = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK']
-            for subj in main_subjects:
+            for subj in subject_cols:
                 spm_features[subj] = grade_to_numeric(pelajar_terpilih.get(subj, 0))
             
             # 4. Gabungkan semua features
@@ -246,13 +363,16 @@ if cari_button:
             prediction = model.predict(feature_df)[0]
             probability = model.predict_proba(feature_df)[0][1]
             
-            # TUNJUK HASIL
+            # ============================================
+            # PAPAR KEPUTUSAN
+            # ============================================
             st.markdown("---")
-            st.subheader("📊 KEPUTUSAN CADANGAN")
+            st.markdown("## 📊 **KEPUTUSAN CADANGAN**")
             
             col_a, col_b = st.columns(2)
             
             with col_a:
+                st.markdown("### 📈 Status Tawaran")
                 if prediction == 1:
                     st.success(f"✅ **DITAWARKAN**")
                 else:
@@ -260,48 +380,28 @@ if cari_button:
                 st.metric("Kebarangkalian", f"{probability:.1%}")
             
             with col_b:
-                st.subheader("🎯 Program Dicadangkan")
+                st.markdown("### 🎯 Program Dicadangkan")
                 
-                recommendations = []
+                # Dapatkan cadangan berdasarkan subjek
+                recommendations = recommend_programs(pelajar_terpilih)
                 
-                # ---------- CADANGAN PROGRAM ----------
-                # Engineering
-                if cluster_scores.get('Engineering_Score', 0) >= 0.7:
-                    recommendations.append("🏗️ **Engineering & Technology**\n- Asasi Kejuruteraan & Teknologi (UTM)\n- Asasi Kejuruteraan & Teknologi (UMP)")
-                
-                # Accounting
-                if cluster_scores.get('Accounting_Score', 0) >= 0.7:
-                    recommendations.append("💰 **Accounting & Finance**\n- Diploma in Accounting\n- Diploma in Accounting + SAP")
-                
-                # Language
-                if cluster_scores.get('Language_Score', 0) >= 0.7:
-                    recommendations.append("🗣️ **Language & Communication**\n- Diploma in English Communication")
-                
-                # Business
-                if cluster_scores.get('Business_Score', 0) >= 0.6:
-                    recommendations.append("📊 **Business & Management**\n- Diploma in Business Studies\n- Diploma in International Business")
-                
-                # Computer
-                if cluster_scores.get('Computer_Score', 0) >= 0.7:
-                    recommendations.append("💻 **Computer Science & IT**\n- Diploma in Computer Science")
-                
-                # Science
-                if cluster_scores.get('Science_Score', 0) >= 0.7:
-                    recommendations.append("🔬 **Science**\n- Asasi Sains")
-                
-                if recommendations:
+                if recommendations and recommendations[0]['cluster'] != 'Tiada':
                     for rec in recommendations:
-                        st.info(rec)
+                        with st.expander(f"**{rec['cluster']}** (Kesesuaian: {rec['score']})"):
+                            for prog in rec['programs']:
+                                st.write(f"- {prog}")
                 else:
-                    st.info("📚 Program umum - sila rujuk pegawai MARA")
+                    st.warning("Tiada cadangan program khusus berdasarkan subjek yang diambil.")
             
-            # Tunjukkan pilihan program asal
+            # ============================================
+            # PAPAR PILIHAN PROGRAM ASAL
+            # ============================================
             with st.expander("📋 Pilihan Program Asal Pelajar"):
-                st.write(f"Pilihan 1: {pelajar_terpilih.get('PIL1', 'N/A')}")
-                st.write(f"Pilihan 2: {pelajar_terpilih.get('PIL2', 'N/A')}")
-                st.write(f"Pilihan 3: {pelajar_terpilih.get('PIL3', 'N/A')}")
+                st.write(f"**Pilihan 1:** {pelajar_terpilih.get('PIL1', 'N/A')}")
+                st.write(f"**Pilihan 2:** {pelajar_terpilih.get('PIL2', 'N/A')}")
+                st.write(f"**Pilihan 3:** {pelajar_terpilih.get('PIL3', 'N/A')}")
                 if 'KURSUSJAYA' in pelajar_terpilih.index:
-                    st.write(f"Status sebenar: {pelajar_terpilih['KURSUSJAYA']}")
+                    st.write(f"**Status sebenar:** {pelajar_terpilih['KURSUSJAYA']}")
         
         else:
             st.error("❌ Pelajar tidak dijumpai. Sila semak semula NOKP atau nama.")
