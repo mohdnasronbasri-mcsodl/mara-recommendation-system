@@ -593,7 +593,7 @@ if cari_button:
                         st.write(f"**{key}:** {prog} - {match_status}")
                 
                 if 'KURSUSJAYA' in pelajar_terpilih.index:
-                    st.write(f"**Status sebenar:** {pelajar_terpilih['KURSUSJAYA']}")
+                    st.write(f"**Berjaya ditawarkan:** {pelajar_terpilih['KURSUSJAYA']}")
             
             # ============================================
             # PAPAR PREDIKSI MODEL (optional)
