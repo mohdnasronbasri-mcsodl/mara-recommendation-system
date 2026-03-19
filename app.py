@@ -22,7 +22,9 @@ def load_model_and_data():
     return model, df
 
 model, df = load_model_and_data()
-feature_names = model.feature_names_in_
+feature_names = list(model.feature_names_in_)
+
+st.sidebar.success(f"✅ Model sedia: {len(feature_names)} features")
 
 # Sidebar
 st.sidebar.header("🔍 Cari Pelajar")
@@ -78,13 +80,41 @@ if cari_button:
                 st.metric("Aliran", pelajar_terpilih.get('ALIRAN', 'N/A'))
                 st.metric("Pendapatan", f"RM {pelajar_terpilih.get('PENDAPATAN', 0):,.2f}")
             
-            # Sediakan features untuk prediction
-            # (Ambil semua kolum kecuali NAMA, NOKP, KURSUSJAYA)
-            exclude_cols = ['NAMA', 'NOKP', 'KURSUSJAYA']
-            feature_data = pelajar_terpilih.drop(labels=[col for col in exclude_cols if col in pelajar_terpilih.index])
+            # ============================================
+            # DEBUG: TENGOK FEATURE NAMES
+            # ============================================
+            with st.expander("🔍 DEBUG: Feature Names dari Model"):
+                st.write(f"Jumlah features: {len(feature_names)}")
+                st.write("10 feature pertama:", feature_names[:10])
             
-            # Pastikan feature order sama dengan model
-            feature_df = pd.DataFrame([feature_data])[list(feature_names)]
+            # Sediakan features untuk prediction
+            # Buat dictionary kosong dengan semua feature names
+            feature_dict = {}
+            
+            # Isi dengan data pelajar (kalau ada)
+            for col in pelajar_terpilih.index:
+                if col in feature_names:
+                    feature_dict[col] = pelajar_terpilih[col]
+            
+            # Isi feature yang tak ada dengan 0
+            for f in feature_names:
+                if f not in feature_dict:
+                    feature_dict[f] = 0
+            
+            # DEBUG: tengok feature yang missing
+            missing_features = [f for f in feature_names if f not in pelajar_terpilih.index]
+            with st.expander("🔍 DEBUG: Feature Analysis"):
+                st.write(f"Feature dalam data: {len([c for c in pelajar_terpilih.index if c in feature_names])}")
+                st.write(f"Feature diisi manual: {len(feature_dict)}")
+                st.write(f"Feature missing (diisi 0): {len(missing_features)}")
+                if len(missing_features) > 0:
+                    st.write("10 missing features pertama:", missing_features[:10])
+            
+            # Buat dataframe
+            feature_df = pd.DataFrame([feature_dict])
+            
+            # Pastikan kolom order sama
+            feature_df = feature_df[feature_names]
             
             # Predict
             prediction = model.predict(feature_df)[0]
@@ -106,9 +136,9 @@ if cari_button:
             with col_b:
                 st.subheader("🎯 Program Dicadangkan")
                 
-                # Fungsi grade to numeric (guna semula)
+                # Fungsi grade to numeric
                 def grade_to_numeric(g):
-                    if pd.isna(g) or g == 'NA':
+                    if pd.isna(g) or g == 'NA' or g == 0:
                         return 0
                     mapping = {
                         'A': 90, 'A-': 90,
@@ -117,7 +147,8 @@ if cari_button:
                         'D': 50,
                         'E': 40
                     }
-                    return mapping.get(str(g).strip(), 0)
+                    val = str(g).strip().upper()
+                    return mapping.get(val, 0)
                 
                 # Dapatkan gred
                 add_math = grade_to_numeric(pelajar_terpilih.get('M-T', 0))
