@@ -378,7 +378,7 @@ if cari_button:
         if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
             st.error("❌ Sila masukkan NOKP")
             st.stop()
-        elif cari_melalui == "Nama" and (not nama_input or nama_input.strip() == ""):
+        elif cari_melalui == "Name" and (not nama_input or nama_input.strip() == ""):
             st.error("❌ Sila masukkan nama")
             st.stop()
         
@@ -465,7 +465,7 @@ if cari_button:
                 st.markdown("### 🎯 Top 5 Recommended Programs")
                 
                 pilihan_asal = []
-                for pil in ['PI1', 'PIL2', 'PIL3']:
+                for pil in ['PIL1', 'PIL2', 'PIL3']:
                     if pil in row.index and pd.notna(row[pil]):
                         pilihan_asal.append(str(row[pil]).strip())
                 
