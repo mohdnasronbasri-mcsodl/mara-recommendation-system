@@ -339,7 +339,7 @@ if search_button:
                 
                 # Profile without labels (just data)
                 st.markdown(f"""
-                <div style='background-color: #f0f2f6; padding: 10px; border-radius: 8px; margin-bottom: 20px;'>
+                <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px;'>
                 <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
                     <tr><td style='padding: 6px;'>{row['NOKP']}</td></tr>
                     <tr><td style='padding: 6px;'>{row['NAMA']}</td></tr>
