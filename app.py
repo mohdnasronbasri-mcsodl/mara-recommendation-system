@@ -360,21 +360,21 @@ def hitung_skor(row, program):
 # ============================================
 # SIDEBAR PENCARIAN
 # ============================================
-st.sidebar.header("🔍 Cari Pelajar")
-cari_melalui = st.sidebar.radio("Cari melalui:", ["NOKP", "Nama"])
+st.sidebar.header("🔍 Search Student")
+cari_melalui = st.sidebar.radio("Cari melalui:", ["NOKP", "Name"])
 
 if cari_melalui == "NOKP":
-    nokp_input = st.sidebar.text_input("Masukkan 12 digit NOKP", placeholder="030807060678")
+    nokp_input = st.sidebar.text_input("Enter the 12-digit IC Number", placeholder="030807060678")
 else:
-    nama_input = st.sidebar.text_input("Masukkan nama penuh", placeholder="NUR AELYA")
+    nama_input = st.sidebar.text_input("Enter full name", placeholder="NUR AELYA")
 
-cari_button = st.sidebar.button("🔍 Cari Pelajar")
+cari_button = st.sidebar.button("🔍 Search Student")
 
 # ============================================
 # MAIN AREA
 # ============================================
 if cari_button:
-    with st.spinner("Mencari pelajar..."):
+    with st.spinner("Seeking students..."):
         if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
             st.error("❌ Sila masukkan NOKP")
             st.stop()
@@ -425,7 +425,7 @@ if cari_button:
                 """, unsafe_allow_html=True)
                 
                 # SUBJEK SPM
-                st.markdown("### 📚 Subjek SPM")
+                st.markdown("### 📚 SPM Subjects & Grade")
                 subject_items = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
@@ -438,34 +438,34 @@ if cari_button:
                     st.markdown(f"""
                     <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
                     <table style='width:100%'>
-                        <tr><th>Subjek</th><th>Gred</th></tr>
+                        <tr><th>Subjek</th><th style='text-align:center'>Gred</th></tr>
                         {items_to_show}
                     </table>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.info("Tiada data subjek")
+                    st.info("No subject data found")
                 
                 # PERINCIAN SKOR (DIPINDAHKAN KE SINI)
-                st.markdown("### 📊 Perincian Skor")
+                st.markdown("### 📊 Score Details")
                 st.markdown("""
-                **Komponen skor:**
-                - Demografi: 10%
-                - Pendapatan: 10% (B40 > T20)
-                - Subjek: 80% (purata subjek berkaitan)
+                **Score Components:**
+                - Demographic: 10%
+                - Income: 10% (B40 > T20)
+                - Subject: 80% (purata subjek berkaitan)
                 - Bonus: +15% jika dalam pilihan asal
                 
-                **Kelayakan:**
-                - ≥80%: Sangat sesuai
-                - 60-79%: Sederhana sesuai
-                - <60%: Kurang sesuai
+                **Qualification / Eligibility:**
+                - ≥80%: Highly Suitable
+                - 60-79%: Moderately Suitable
+                - <60%: Less Suitable
                 """)
             
             with col_kanan:
-                st.markdown("### 🎯 5 Program Terbaik")
+                st.markdown("### 🎯 Top 5 Recommended Programs")
                 
                 pilihan_asal = []
-                for pil in ['PIL1', 'PIL2', 'PIL3']:
+                for pil in ['PI1', 'PIL2', 'PIL3']:
                     if pil in row.index and pd.notna(row[pil]):
                         pilihan_asal.append(str(row[pil]).strip())
                 
@@ -485,11 +485,11 @@ if cari_button:
                             'in_original': in_original
                         })
                 
-                st.caption(f"📊 Program layak: {len(program_scores)} daripada {len(ALL_PROGRAMS)}")
+                st.caption(f"📊 Eligible Programs: {len(program_scores)} from {len(ALL_PROGRAMS)}")
                 
                 if len(program_scores) == 0:
-                    st.warning("⚠️ Tiada program yang layak")
-                    with st.expander("🔍 Debug: Semua program"):
+                    st.warning("⚠️ No eligible programs / No suitable programs found.")
+                    with st.expander("🔍 Debug: All programs"):
                         for prog in ALL_PROGRAMS:
                             eligible, reasons = is_eligible(row, prog, debug=True)
                             status = "✅ LAYAK" if eligible else "❌ TIDAK LAYAK"
@@ -513,13 +513,13 @@ if cari_button:
                         st.markdown(f"""
                         <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {color}; border-radius: 3px;'>
                             <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
-                            <span style='font-size: 0.9em; color: {color}'><b>Kesesuaian: {prog['score']}%</b></span>
-                            <span style='font-size: 0.8em; color: gray;'>Kumpulan {prog['group']}</span>
+                            <span style='font-size: 0.9em; color: {color}'><b>Suitability : {prog['score']}%</b></span>
+                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
                     # PILIHAN ASAL
-                    st.markdown("### 📋 Pilihan Asal Pelajar")
+                    st.markdown("### 📋 Student's Original Choices")
                     table_rows = []
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
@@ -529,7 +529,7 @@ if cari_button:
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
                     <table style='width:100%'>
-                        <tr><th>Pilihan</th><th>Program</th><th>Cadangan</th></tr>
+                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>Recommend?</th></tr>
                         {''.join(table_rows)}
                     </table>
                     </div>
@@ -541,6 +541,6 @@ if cari_button:
                         if program_ditawar != 'TIDAK DITAWARKAN':
                             st.markdown(f"""
                             <div style='background-color: #28a745; padding: 10px; border-radius: 5px; margin-top: 10px;'>
-                                <span style='color: white; font-weight: bold;'>✅ Program Ditawar: {program_ditawar}</span>
+                                <span style='color: white; font-weight: bold;'>✅ Programs Offered <br> {program_ditawar}</span>
                             </div>
                             """, unsafe_allow_html=True)
