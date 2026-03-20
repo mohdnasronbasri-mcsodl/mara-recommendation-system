@@ -58,148 +58,154 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# FUNGSI XAI - TERANG KENAPA LAYAK
+# FUNGSI XAI MENGIKUT GROUP
 # ============================================
 def generate_explanation(row, program):
-    explanation = []
+    group = program.get('group', 0)
     syarat = program.get('syarat', {})
+    reasons = []
     
-    # Senarai subjek yang dipenuhi
-    fulfilled = []
-    
-    # BM
-    bm = grade_to_numeric(row.get('BM', 0))
-    if bm >= syarat.get('BM', 0):
-        fulfilled.append(f"BM {row.get('BM', '')}")
-    
-    # BI
-    bi = grade_to_numeric(row.get('BI', 0))
-    if 'BI' in syarat and bi >= syarat['BI']:
-        fulfilled.append(f"BI {row.get('BI', '')}")
-    elif 'BI_min' in syarat and bi >= syarat['BI_min']:
-        fulfilled.append(f"BI {row.get('BI', '')}")
-    
-    # Math
-    math = grade_to_numeric(row.get('MAT', 0))
-    if math >= syarat.get('MAT', 0):
-        fulfilled.append(f"Math {row.get('MAT', '')}")
-    
-    # M-T
-    mt = grade_to_numeric(row.get('M-T', 0))
-    if 'M-T' in syarat and mt >= syarat['M-T']:
-        fulfilled.append(f"Add Math {row.get('M-T', '')}")
-    
-    # Sains
-    if 'sains_min' in syarat:
+    if group == 7:  # Asasi
+        mt = grade_to_numeric(row.get('M-T', 0))
         fizik = grade_to_numeric(row.get('FIZ', 0))
         kim = grade_to_numeric(row.get('KIM', 0))
-        if fizik >= syarat['sains_min']:
-            fulfilled.append(f"Fizik {row.get('FIZ', '')}")
-        elif kim >= syarat['sains_min']:
-            fulfilled.append(f"Kimia {row.get('KIM', '')}")
+        bm = grade_to_numeric(row.get('BM', 0))
+        math = grade_to_numeric(row.get('MAT', 0))
+        
+        if mt >= 75:
+            reasons.append(f"Add Math {row.get('M-T', '')} (≥B)")
+        if fizik >= 75:
+            reasons.append(f"Fizik {row.get('FIZ', '')} (≥B)")
+        if kim >= 75:
+            reasons.append(f"Kimia {row.get('KIM', '')} (≥B)")
+        if bm >= 85:
+            reasons.append(f"BM {row.get('BM', '')} (≥A-)")
+        if math >= 85:
+            reasons.append(f"Math {row.get('MAT', '')} (≥A-)")
+        
+        if reasons:
+            return "Layak Asasi: " + ", ".join(reasons[:3])
+        else:
+            return "Layak Asasi (syarat minimum dipenuhi)"
     
-    if fulfilled:
-        explanation.append(" ✓ " + ", ".join(fulfilled[:3]))
-    else:
-        explanation.append(" ✓ Memenuhi syarat minimum")
+    elif group == 6:  # Accounting + SAP
+        acc = grade_to_numeric(row.get('ACC', 0))
+        math = grade_to_numeric(row.get('MAT', 0))
+        bi = grade_to_numeric(row.get('BI', 0))
+        
+        if acc >= 75:
+            reasons.append(f"ACC {row.get('ACC', '')} (≥B)")
+        if math >= 75:
+            reasons.append(f"Math {row.get('MAT', '')} (≥B)")
+        if bi >= 75:
+            reasons.append(f"BI {row.get('BI', '')} (≥B)")
+        
+        return "Layak Accounting + SAP: " + ", ".join(reasons[:3]) if reasons else "Layak Accounting + SAP"
     
-    return " ".join(explanation)
+    elif group == 2:  # Computer Science + Certification
+        math = grade_to_numeric(row.get('MAT', 0))
+        bi = grade_to_numeric(row.get('BI', 0))
+        
+        if math >= 75:
+            reasons.append(f"Math {row.get('MAT', '')} (≥B)")
+        if bi >= 75:
+            reasons.append(f"BI {row.get('BI', '')} (≥B)")
+        
+        return "Layak CS + Certification: " + ", ".join(reasons) if reasons else "Layak CS + Certification"
+    
+    elif group == 3:  # Computer Science Basic
+        math = grade_to_numeric(row.get('MAT', 0))
+        if math >= 60:
+            reasons.append(f"Math {row.get('MAT', '')} (≥C)")
+        
+        other_count = 0
+        for subj in ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC']:
+            if grade_to_numeric(row.get(subj, 0)) >= 60:
+                other_count += 1
+        
+        if other_count > 0:
+            reasons.append(f"{other_count} subjek lain ≥C")
+        
+        return "Layak CS Basic: " + ", ".join(reasons) if reasons else "Layak CS Basic"
+    
+    elif group == 4:  # English Communication
+        bi = grade_to_numeric(row.get('BI', 0))
+        if bi >= 75:
+            reasons.append(f"BI {row.get('BI', '')} (≥B)")
+        
+        return "Layak English: " + ", ".join(reasons) if reasons else "Layak English Communication"
+    
+    elif group == 5:  # Accounting Basic
+        math = grade_to_numeric(row.get('MAT', 0))
+        if math >= 60:
+            reasons.append(f"Math {row.get('MAT', '')} (≥C)")
+        
+        return "Layak Accounting Basic: " + ", ".join(reasons) if reasons else "Layak Accounting Basic"
+    
+    else:  # Group 1
+        bm = grade_to_numeric(row.get('BM', 0))
+        if bm >= 60:
+            reasons.append(f"BM {row.get('BM', '')} (≥C)")
+        
+        other_count = 0
+        for subj in ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO']:
+            if grade_to_numeric(row.get(subj, 0)) >= 60:
+                other_count += 1
+        
+        if other_count >= 2:
+            reasons.append(f"{other_count} subjek lain ≥C")
+        
+        return "Layak Program Umum: " + ", ".join(reasons) if reasons else "Layak Program Umum"
 
 # ============================================
-# SENARAI PROGRAM (sama macam sebelum ni)
+# SENARAI PROGRAM DENGAN GROUP & PRIORITY
 # ============================================
 ALL_PROGRAMS = [
-    # ========== GROUP 1 ==========
+    # GROUP 7 (PALING TINGGI)
     {
-        'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport',
-        'cluster': 'Logistics',
-        'group': 1,
+        'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
+        'cluster': 'Engineering',
+        'group': 7,
+        'priority': 1,
         'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
+            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
+            'sains_min': 75,
             'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
+            'other_min': 75
         }
     },
     {
-        'name': 'Diploma in Halal Industry + Halal Executive Certification',
-        'cluster': 'Halal',
-        'group': 1,
+        'name': 'Asasi Kejuruteraan & Teknologi (UMPSA)',
+        'cluster': 'Engineering',
+        'group': 7,
+        'priority': 1,
         'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
+            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
+            'sains_min': 75,
             'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
-        }
-    },
-    {
-        'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance',
-        'cluster': 'Islamic Finance',
-        'group': 1,
-        'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
-            'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
-        }
-    },
-    {
-        'name': 'Diploma in Business Studies',
-        'cluster': 'Business',
-        'group': 1,
-        'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
-            'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
-        }
-    },
-    {
-        'name': 'Diploma in Business Information Technology',
-        'cluster': 'Business IT',
-        'group': 1,
-        'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
-            'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
-        }
-    },
-    {
-        'name': 'Diploma in International Business',
-        'cluster': 'Business',
-        'group': 1,
-        'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
-            'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
-        }
-    },
-    {
-        'name': 'Diploma in Creative Digital Media Production',
-        'cluster': 'Creative Arts',
-        'group': 1,
-        'syarat': {
-            'BM': 60, 'MAT': 40, 'SEJ': 40,
-            'BI_min': 40,
-            'other_count': 2,
-            'other_min': 60,
-            'BI_syarat_khas': True
+            'other_min': 75
         }
     },
     
-    # ========== GROUP 2 ==========
+    # GROUP 6
+    {
+        'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification',
+        'cluster': 'Accounting',
+        'group': 6,
+        'priority': 2,
+        'syarat': {
+            'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
+            'other_count': 1,
+            'other_min': 60
+        }
+    },
+    
+    # GROUP 2
     {
         'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification',
         'cluster': 'Computer Science',
         'group': 2,
+        'priority': 3,
         'syarat': {
             'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
             'other_count': 2,
@@ -210,6 +216,7 @@ ALL_PROGRAMS = [
         'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification',
         'cluster': 'Marketing',
         'group': 2,
+        'priority': 3,
         'syarat': {
             'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
             'other_count': 2,
@@ -217,11 +224,12 @@ ALL_PROGRAMS = [
         }
     },
     
-    # ========== GROUP 3 ==========
+    # GROUP 3
     {
         'name': 'Diploma in Computer Science',
         'cluster': 'Computer Science',
         'group': 3,
+        'priority': 4,
         'syarat': {
             'BM': 60, 'MAT': 60, 'SEJ': 40,
             'BI_min': 40,
@@ -230,11 +238,12 @@ ALL_PROGRAMS = [
         }
     },
     
-    # ========== GROUP 4 ==========
+    # GROUP 4
     {
         'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM',
         'cluster': 'Language',
         'group': 4,
+        'priority': 5,
         'syarat': {
             'BM': 60, 'BI': 75, 'MAT': 40, 'SEJ': 40,
             'other_count': 1,
@@ -242,11 +251,12 @@ ALL_PROGRAMS = [
         }
     },
     
-    # ========== GROUP 5 ==========
+    # GROUP 5
     {
         'name': 'Diploma in Accounting',
         'cluster': 'Accounting',
         'group': 5,
+        'priority': 6,
         'syarat': {
             'BM': 60, 'MAT': 60, 'SEJ': 40,
             'BI_min': 40,
@@ -255,41 +265,89 @@ ALL_PROGRAMS = [
         }
     },
     
-    # ========== GROUP 6 ==========
+    # GROUP 1 (PALING RENDAH)
     {
-        'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification',
-        'cluster': 'Accounting',
-        'group': 6,
+        'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport',
+        'cluster': 'Logistics',
+        'group': 1,
+        'priority': 7,
         'syarat': {
-            'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40,
-            'other_count': 1,
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
             'other_min': 60
         }
     },
-    
-    # ========== GROUP 7 (ASASI) ==========
     {
-        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia',
-        'cluster': 'Engineering',
-        'group': 7,
-        'priority': 1,  # Priority tinggi
+        'name': 'Diploma in Halal Industry + Halal Executive Certification',
+        'cluster': 'Halal',
+        'group': 1,
+        'priority': 7,
         'syarat': {
-            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
-            'sains_min': 75,
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
             'other_count': 2,
-            'other_min': 75
+            'other_min': 60
         }
     },
     {
-        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah',
-        'cluster': 'Engineering',
-        'group': 7,
-        'priority': 1,
+        'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance',
+        'cluster': 'Islamic Finance',
+        'group': 1,
+        'priority': 7,
         'syarat': {
-            'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
-            'sains_min': 75,
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
             'other_count': 2,
-            'other_min': 75
+            'other_min': 60
+        }
+    },
+    {
+        'name': 'Diploma in Business Studies',
+        'cluster': 'Business',
+        'group': 1,
+        'priority': 7,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60
+        }
+    },
+    {
+        'name': 'Diploma in Business Information Technology',
+        'cluster': 'Business IT',
+        'group': 1,
+        'priority': 7,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60
+        }
+    },
+    {
+        'name': 'Diploma in International Business',
+        'cluster': 'Business',
+        'group': 1,
+        'priority': 7,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60
+        }
+    },
+    {
+        'name': 'Diploma in Creative Digital Media Production',
+        'cluster': 'Creative Arts',
+        'group': 1,
+        'priority': 7,
+        'syarat': {
+            'BM': 60, 'MAT': 40, 'SEJ': 40,
+            'BI_min': 40,
+            'other_count': 2,
+            'other_min': 60
         }
     }
 ]
@@ -298,39 +356,38 @@ ALL_PROGRAMS = [
 # FUNGSI SEMAK KELAYAKAN
 # ============================================
 def is_eligible(row, program, debug=False):
-    results = []
     syarat = program.get('syarat', {})
     
     sejarah = grade_to_numeric(row.get('SEJ', 0))
     if sejarah < syarat.get('SEJ', 0):
-        return False, results
+        return False
     
     bm = grade_to_numeric(row.get('BM', 0))
     if bm < syarat.get('BM', 0):
-        return False, results
+        return False
     
     math = grade_to_numeric(row.get('MAT', 0))
     if math < syarat.get('MAT', 0):
-        return False, results
+        return False
     
     bi = grade_to_numeric(row.get('BI', 0))
     if 'BI' in syarat:
         if bi < syarat['BI']:
-            return False, results
+            return False
     elif 'BI_min' in syarat:
         if bi < syarat['BI_min']:
-            return False, results
+            return False
     
     if 'M-T' in syarat:
         mt = grade_to_numeric(row.get('M-T', 0))
         if mt < syarat['M-T']:
-            return False, results
+            return False
     
     if 'sains_min' in syarat:
         fizik = grade_to_numeric(row.get('FIZ', 0))
         kim = grade_to_numeric(row.get('KIM', 0))
         if max(fizik, kim) < syarat['sains_min']:
-            return False, results
+            return False
     
     if 'other_count' in syarat:
         wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
@@ -340,12 +397,12 @@ def is_eligible(row, program, debug=False):
             if grade_to_numeric(row[subj]) >= syarat['other_min']:
                 other_pass += 1
         if other_pass < syarat['other_count']:
-            return False, results
+            return False
     
-    return True, results
+    return True
 
 # ============================================
-# FUNGSI HITUNG SKOR (DENGAN PRIORITI ASASI)
+# FUNGSI HITUNG SKOR (PRIORITY BERAT)
 # ============================================
 def hitung_skor(row, program):
     skor = 0
@@ -392,11 +449,36 @@ def hitung_skor(row, program):
     
     base_score = skor / total_bobot * 100 if total_bobot > 0 else 50
     
-    # TAMBAH PRIORITI UNTUK ASASI (GROUP 7)
-    if program.get('group') == 7:
-        base_score = min(base_score + 10, 100)  # Bonus 10% untuk Asasi
+    # Priority bonus berdasarkan group (lebih tinggi group, lebih besar bonus)
+    priority_bonus = {
+        7: 20,  # Asasi +20%
+        6: 15,  # Accounting SAP +15%
+        2: 12,  # CS Cert +12%
+        3: 10,  # CS Basic +10%
+        4: 8,   # English +8%
+        5: 5,   # Accounting Basic +5%
+        1: 0    # Group 1 no bonus
+    }
+    
+    bonus = priority_bonus.get(program.get('group', 1), 0)
+    base_score = min(base_score + bonus, 100)
     
     return round(base_score, 1)
+
+# ============================================
+# FUNGSI CHECK PROGRAM DITAWAR
+# ============================================
+def check_offered_program(program_ditawar, pilihan_asal):
+    if program_ditawar == 'TIDAK DITAWARKAN':
+        return None
+    
+    # Check dalam pilihan 1-3
+    for i, p in enumerate(pilihan_asal, 1):
+        if program_ditawar.lower() in p.lower():
+            return f"✅ Program Ditawar: {program_ditawar} (Pilihan PIL{i})"
+    
+    # Kalau takde dalam pilihan 1-3
+    return f"✅ Program Ditawar: {program_ditawar}\n\n📝 Nota: Program ini mungkin merupakan pilihan 4-12 dalam senarai penuh UPUOnline. Dalam sistem MARA, pelajar boleh memilih sehingga 12 program, dan tawaran boleh dibuat untuk mana-mana pilihan yang dipenuhi syarat."
 
 # ============================================
 # SIDEBAR PENCARIAN
@@ -486,8 +568,17 @@ if cari_button:
                 - Demographic: 10%
                 - Income: 10% (B40 higher score)
                 - Subjects: 80% (average of relevant subjects)
-                - Foundation Priority: +10% for Asasi programmes
+                - Group Priority: Higher groups get bonus (Asasi +20%, etc)
                 - Bonus: +15% if in student's original choices
+                
+                **Priority Order:**
+                1️⃣ Group 7 (Asasi) - Tertinggi  
+                2️⃣ Group 6 (Accounting + SAP)  
+                3️⃣ Group 2 (CS + Certification)  
+                4️⃣ Group 3 (CS Basic)  
+                5️⃣ Group 4 (English)  
+                6️⃣ Group 5 (Accounting Basic)  
+                7️⃣ Group 1 (Business, Logistics) - Terendah
                 
                 **Eligibility:**
                 - ≥80%: Highly Suitable
@@ -505,33 +596,32 @@ if cari_button:
                 
                 program_scores = []
                 for prog in ALL_PROGRAMS:
-                    eligible, _ = is_eligible(row, prog, debug=False)
-                    if eligible:
+                    if is_eligible(row, prog):
                         skor = hitung_skor(row, prog)
                         in_original = any(prog['name'].lower() in p.lower() for p in pilihan_asal)
                         if in_original:
                             skor = min(skor + 15, 100)
                         
-                        # Dapatkan explanation untuk XAI
                         explanation = generate_explanation(row, prog)
                         
                         program_scores.append({
                             'name': prog['name'],
-                            'cluster': prog['cluster'],
                             'group': prog['group'],
+                            'priority': prog.get('priority', 999),
                             'score': skor,
                             'in_original': in_original,
                             'explanation': explanation
                         })
+                
+                # Sort ikut priority group dulu, then score
+                program_scores.sort(key=lambda x: (x['priority'], -x['score']))
+                top5 = program_scores[:5]
                 
                 st.caption(f"📊 Eligible Programs: {len(program_scores)} out of {len(ALL_PROGRAMS)}")
                 
                 if len(program_scores) == 0:
                     st.warning("⚠️ No suitable programs found.")
                 else:
-                    program_scores.sort(key=lambda x: x['score'], reverse=True)
-                    top5 = program_scores[:5]
-                    
                     for i, prog in enumerate(top5, 1):
                         if prog['score'] >= 80:
                             color = "#28a745"
@@ -542,13 +632,20 @@ if cari_button:
                         
                         star = " ⭐" if prog['in_original'] else ""
                         
-                        # Paparan dengan XAI
+                        # Tentukan icon group
+                        if prog['group'] == 7:
+                            group_icon = "🏆"
+                        elif prog['group'] <= 3:
+                            group_icon = "✨"
+                        else:
+                            group_icon = "📌"
+                        
                         st.markdown(f"""
                         <div style='margin-bottom: 15px; padding: 10px; border-left: 5px solid {color}; border-radius: 3px; background-color: #f8f9fa;'>
-                            <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
+                            <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b> {group_icon}</span><br>
                             <span style='font-size: 0.9em; color: {color}'><b>Suitability: {prog['score']}%</b></span><br>
-                            <span style='font-size: 0.85em; color: #666;'><i>Why: {prog['explanation']}</i></span><br>
-                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']}</span>
+                            <span style='font-size: 0.85em; color: #444;'><i>✓ {prog['explanation']}</i></span><br>
+                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']} | Priority {prog['priority']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -557,13 +654,14 @@ if cari_button:
                     table_rows = []
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
-                        status = "✓" if in_top5 else "✗"
-                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
+                        status = "✅" if in_top5 else "❌"
+                        status_text = "In Top 5" if in_top5 else "Not in Top 5"
+                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}<br><small>{status_text}</small></td></tr>")
                     
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
                     <table style='width:100%'>
-                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In Top 5?</th></tr>
+                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>Status</th></tr>
                         {''.join(table_rows)}
                     </table>
                     </div>
@@ -573,8 +671,9 @@ if cari_button:
                     if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                         program_ditawar = row['KURSUSJAYA']
                         if program_ditawar != 'TIDAK DITAWARKAN':
-                            st.markdown(f"""
-                            <div style='background-color: #28a745; padding: 10px; border-radius: 5px; margin-top: 10px;'>
-                                <span style='color: white; font-weight: bold;'>✅ Program Offered: {program_ditawar}</span>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            offered_message = check_offered_program(program_ditawar, pilihan_asal)
+                            if offered_message:
+                                if "Pilihan" in offered_message:
+                                    st.success(offered_message)
+                                else:
+                                    st.info(offered_message)
