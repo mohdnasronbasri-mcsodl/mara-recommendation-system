@@ -284,7 +284,11 @@ ALL_PROGRAMS = [
 # ============================================
 def check_offered_program(program_ditawar, original_choices):
     if program_ditawar == 'TIDAK DITAWARKAN' or pd.isna(program_ditawar):
-        return None
+        return {
+            'type': 'info',
+            'message': "❌ Student was not offered any program.",
+            'note': "This may be due to quota limitations or the student not meeting the required criteria."
+        }
     
     for i, p in enumerate(original_choices, 1):
         if program_ditawar.lower() in p.lower():
@@ -341,12 +345,12 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px;'>
                 <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
-                    <tr><td style='padding: 6px; color: #000000;'>{row['NOKP']}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'>{row['NAMA']}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                     <td style='padding: 6px; color: #000000;'>{row['NOKP']}</td>
+                     <td style='padding: 6px; color: #000000;'>{row['NAMA']}</td>
+                     <td style='padding: 6px; color: #000000;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td>
+                     <td style='padding: 6px; color: #000000;'>{row.get('LOKASI', 'N/A')}</td>
+                     <td style='padding: 6px; color: #000000;'>{row.get('ALIRAN', 'N/A')}</td>
+                     <td style='padding: 6px; color: #000000;'>RM {row.get('PENDAPATAN', 0):,.0f}</td>
                 </table>
                 </div>
                 """, unsafe_allow_html=True)
@@ -363,7 +367,6 @@ if search_button:
                 
                 if subject_data:
                     df_subjects = pd.DataFrame(subject_data)
-                    # Center the Grade column
                     st.dataframe(df_subjects.style.set_properties(**{'text-align': 'center'}, subset=['Grade']), 
                                 use_container_width=True, hide_index=True)
                 else:
@@ -396,12 +399,30 @@ if search_button:
                 # ORIGINAL CHOICES (ABOVE)
                 # ========================================
                 st.markdown("### 📋 Student's Original Choices")
+                
+                # Evaluate ALL programs first to check which ones are in recommendations
+                all_programs_for_check = []
+                for prog in ALL_PROGRAMS:
+                    eligible, _ = is_eligible(row, prog)
+                    score = calculate_score(row, prog) if eligible else 0
+                    all_programs_for_check.append({
+                        'name': prog['name'],
+                        'eligible': eligible,
+                        'score': score
+                    })
+                
+                # Sort to get top recommendations
+                all_programs_for_check.sort(key=lambda x: -x['score'])
+                top_recommendations = [p['name'] for p in all_programs_for_check[:10]]  # Top 10 for checking
+                
                 choice_rows = []
                 for i, p in enumerate(original_choices, 1):
-                    choice_rows.append([f"Choice {i}", p])
+                    in_list = any(p.lower() in rec.lower() for rec in top_recommendations)
+                    status = "✅" if in_list else "❌"
+                    choice_rows.append([f"Choice {i}", p, status])
                 
                 if choice_rows:
-                    df_choices = pd.DataFrame(choice_rows, columns=["Choice", "Program"])
+                    df_choices = pd.DataFrame(choice_rows, columns=["Choice", "Program", "In Recommendations?"])
                     st.dataframe(df_choices, use_container_width=True, hide_index=True)
                 else:
                     st.info("No original choices recorded")
@@ -467,10 +488,9 @@ if search_button:
                 # Offered Program
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                     program_offered = str(row['KURSUSJAYA']).strip()
-                    if program_offered != 'TIDAK DITAWARKAN':
-                        offered_info = check_offered_program(program_offered, original_choices)
-                        if offered_info:
-                            if offered_info['type'] == 'success':
-                                st.success(offered_info['message'])
-                            else:
-                                st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
+                    offered_info = check_offered_program(program_offered, original_choices)
+                    if offered_info:
+                        if offered_info['type'] == 'success':
+                            st.success(offered_info['message'])
+                        else:
+                            st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
