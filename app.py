@@ -124,7 +124,7 @@ def generate_explanation(row, program):
                 other_count += 1
         
         if other_count > 0:
-            reasons.append(f"{other_count} subjek lain ≥C")
+            reasons.append(f"{other_count} other subjects ≥C")
         
         return "Eligible for CS Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
     
@@ -153,7 +153,7 @@ def generate_explanation(row, program):
                 other_count += 1
         
         if other_count >= 2:
-            reasons.append(f"{other_count} subjek lain ≥C")
+            reasons.append(f"{other_count} other subjects ≥C")
         
         return "Eligible for General Programs: " + ", ".join(reasons) if reasons else "Eligible for General Programs"
 
@@ -449,7 +449,7 @@ def hitung_skor(row, program):
     
     base_score = skor / total_bobot * 100 if total_bobot > 0 else 50
     
-    # Priority bonus berdasarkan group (lebih tinggi group, lebih besar bonus)
+    # Priority bonus berdasarkan group
     priority_bonus = {
         7: 20,  # Asasi +20%
         6: 15,  # Accounting SAP +15%
@@ -466,19 +466,27 @@ def hitung_skor(row, program):
     return round(base_score, 1)
 
 # ============================================
-# FUNGSI CHECK PROGRAM DITAWAR
+# FUNGSI CHECK PROGRAM DITAWAR (VERSI BETUL)
 # ============================================
 def check_offered_program(program_ditawar, pilihan_asal):
-    if program_ditawar == 'TIDAK DITAWARKAN':
+    # Jika TIDAK DITAWARKAN, return None (tak papar apa-apa)
+    if program_ditawar == 'TIDAK DITAWARKAN' or pd.isna(program_ditawar):
         return None
     
     # Check dalam pilihan 1-3
     for i, p in enumerate(pilihan_asal, 1):
         if program_ditawar.lower() in p.lower():
-            return f"✅ Programs Offered: {program_ditawar} (PIL{i})"
+            return {
+                'type': 'success',
+                'message': f"✅ Program Offered: {program_ditawar} (Choice {i})"
+            }
     
     # Kalau takde dalam pilihan 1-3
-    return f"✅ Programs Offered: {program_ditawar}\n\n📝 Note: This program may be choices 4-12 in the full UPUOnline list. In the MARA system, students can choose up to 12 programs, and an offer can be made for any choice that meets the requirements"
+    return {
+        'type': 'info',
+        'message': f"✅ Program Offered: {program_ditawar}",
+        'note': "📝 Note: This program may be among choices 4-12 in the full UPUOnline list. In the MARA system, students can choose up to 12 programs, and an offer can be made for any choice that meets the requirements."
+    }
 
 # ============================================
 # SIDEBAR PENCARIAN
@@ -573,13 +581,13 @@ if cari_button:
                 
                 **Priority Order:**
                 
-                1️⃣ Group 7 (Asasi) - Tertinggi  
+                1️⃣ Group 7 (Foundation) - Highest  
                 2️⃣ Group 6 (Accounting + SAP)  
                 3️⃣ Group 2 (CS/MK + Certification)  
                 4️⃣ Group 3 (CS Basic)  
                 5️⃣ Group 4 (English)  
                 6️⃣ Group 5 (Accounting Basic)  
-                7️⃣ Group 1 (Business, Logistics, Creative) - Terendah
+                7️⃣ Group 1 (Business, Logistics, Creative) - Lowest
                 
                 **Eligibility:**
                 - ≥80%: Highly Suitable
@@ -656,13 +664,12 @@ if cari_button:
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
                         status = "✅" if in_top5 else "❌"
-                        status_text = "" if in_top5 else ""
-                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}<br><small>{status_text}</small></td></tr>")
+                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
                     
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
                     <table style='width:100%'>
-                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>Status</th></tr>
+                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In Top 5?</th></tr>
                         {''.join(table_rows)}
                     </table>
                     </div>
@@ -670,11 +677,11 @@ if cari_button:
                     
                     # PROGRAM DITAWAR
                     if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
-                        program_ditawar = row['KURSUSJAYA']
-                        if program_ditawar != 'TIDAK DITAWARKAN':
-                            offered_message = check_offered_program(program_ditawar, pilihan_asal)
-                            if offered_message:
-                                if "Pilihan" in offered_message:
-                                    st.success(offered_message)
-                                else:
-                                    st.info(offered_message)
+                        program_ditawar = str(row['KURSUSJAYA']).strip()
+                        offered_info = check_offered_program(program_ditawar, pilihan_asal)
+                        
+                        if offered_info:
+                            if offered_info['type'] == 'success':
+                                st.success(offered_info['message'])
+                            else:
+                                st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
