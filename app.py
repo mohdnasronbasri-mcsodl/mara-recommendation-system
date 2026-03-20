@@ -58,7 +58,55 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# SENARAI PROGRAM DENGAN SYARAT TERKINI
+# FUNGSI XAI - TERANG KENAPA LAYAK
+# ============================================
+def generate_explanation(row, program):
+    explanation = []
+    syarat = program.get('syarat', {})
+    
+    # Senarai subjek yang dipenuhi
+    fulfilled = []
+    
+    # BM
+    bm = grade_to_numeric(row.get('BM', 0))
+    if bm >= syarat.get('BM', 0):
+        fulfilled.append(f"BM {row.get('BM', '')}")
+    
+    # BI
+    bi = grade_to_numeric(row.get('BI', 0))
+    if 'BI' in syarat and bi >= syarat['BI']:
+        fulfilled.append(f"BI {row.get('BI', '')}")
+    elif 'BI_min' in syarat and bi >= syarat['BI_min']:
+        fulfilled.append(f"BI {row.get('BI', '')}")
+    
+    # Math
+    math = grade_to_numeric(row.get('MAT', 0))
+    if math >= syarat.get('MAT', 0):
+        fulfilled.append(f"Math {row.get('MAT', '')}")
+    
+    # M-T
+    mt = grade_to_numeric(row.get('M-T', 0))
+    if 'M-T' in syarat and mt >= syarat['M-T']:
+        fulfilled.append(f"Add Math {row.get('M-T', '')}")
+    
+    # Sains
+    if 'sains_min' in syarat:
+        fizik = grade_to_numeric(row.get('FIZ', 0))
+        kim = grade_to_numeric(row.get('KIM', 0))
+        if fizik >= syarat['sains_min']:
+            fulfilled.append(f"Fizik {row.get('FIZ', '')}")
+        elif kim >= syarat['sains_min']:
+            fulfilled.append(f"Kimia {row.get('KIM', '')}")
+    
+    if fulfilled:
+        explanation.append(" ✓ " + ", ".join(fulfilled[:3]))
+    else:
+        explanation.append(" ✓ Memenuhi syarat minimum")
+    
+    return " ".join(explanation)
+
+# ============================================
+# SENARAI PROGRAM (sama macam sebelum ni)
 # ============================================
 ALL_PROGRAMS = [
     # ========== GROUP 1 ==========
@@ -219,11 +267,12 @@ ALL_PROGRAMS = [
         }
     },
     
-    # ========== GROUP 7 ==========
+    # ========== GROUP 7 (ASASI) ==========
     {
         'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
         'cluster': 'Engineering',
         'group': 7,
+        'priority': 1,  # Priority tinggi
         'syarat': {
             'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
             'sains_min': 75,
@@ -235,6 +284,7 @@ ALL_PROGRAMS = [
         'name': 'Asasi Kejuruteraan & Teknologi (UMPSA)',
         'cluster': 'Engineering',
         'group': 7,
+        'priority': 1,
         'syarat': {
             'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40,
             'sains_min': 75,
@@ -253,42 +303,33 @@ def is_eligible(row, program, debug=False):
     
     sejarah = grade_to_numeric(row.get('SEJ', 0))
     if sejarah < syarat.get('SEJ', 0):
-        if debug: results.append(f"❌ Sejarah: {sejarah} < {syarat.get('SEJ', 0)}")
         return False, results
     
     bm = grade_to_numeric(row.get('BM', 0))
     if bm < syarat.get('BM', 0):
-        if debug: results.append(f"❌ BM: {bm} < {syarat.get('BM', 0)}")
         return False, results
     
     math = grade_to_numeric(row.get('MAT', 0))
     if math < syarat.get('MAT', 0):
-        if debug: results.append(f"❌ MAT: {math} < {syarat.get('MAT', 0)}")
         return False, results
     
     bi = grade_to_numeric(row.get('BI', 0))
     if 'BI' in syarat:
         if bi < syarat['BI']:
-            if debug: results.append(f"❌ BI: {bi} < {syarat['BI']}")
             return False, results
     elif 'BI_min' in syarat:
         if bi < syarat['BI_min']:
-            if debug: results.append(f"❌ BI: {bi} < {syarat['BI_min']}")
             return False, results
-        if syarat.get('BI_syarat_khas', False) and bi <= 50:
-            if debug: results.append("⚠️ BI E/D - layak tapi perlu program pra-diploma")
     
     if 'M-T' in syarat:
         mt = grade_to_numeric(row.get('M-T', 0))
         if mt < syarat['M-T']:
-            if debug: results.append(f"❌ M-T: {mt} < {syarat['M-T']}")
             return False, results
     
     if 'sains_min' in syarat:
         fizik = grade_to_numeric(row.get('FIZ', 0))
         kim = grade_to_numeric(row.get('KIM', 0))
         if max(fizik, kim) < syarat['sains_min']:
-            if debug: results.append(f"❌ Fizik/Kimia: {max(fizik, kim)} < {syarat['sains_min']}")
             return False, results
     
     if 'other_count' in syarat:
@@ -299,16 +340,12 @@ def is_eligible(row, program, debug=False):
             if grade_to_numeric(row[subj]) >= syarat['other_min']:
                 other_pass += 1
         if other_pass < syarat['other_count']:
-            if debug: results.append(f"❌ Hanya {other_pass}/{syarat['other_count']} subjek lain ≥ {syarat['other_min']}")
             return False, results
-    
-    if debug:
-        results.append("✅ Semua syarat dipenuhi")
     
     return True, results
 
 # ============================================
-# FUNGSI HITUNG SKOR
+# FUNGSI HITUNG SKOR (DENGAN PRIORITI ASASI)
 # ============================================
 def hitung_skor(row, program):
     skor = 0
@@ -353,18 +390,22 @@ def hitung_skor(row, program):
         skor += purata * 0.8
         total_bobot += 80
     
-    if total_bobot > 0:
-        return round((skor / total_bobot) * 100, 1)
-    return 50
+    base_score = skor / total_bobot * 100 if total_bobot > 0 else 50
+    
+    # TAMBAH PRIORITI UNTUK ASASI (GROUP 7)
+    if program.get('group') == 7:
+        base_score = min(base_score + 10, 100)  # Bonus 10% untuk Asasi
+    
+    return round(base_score, 1)
 
 # ============================================
 # SIDEBAR PENCARIAN
 # ============================================
 st.sidebar.header("🔍 Search Student")
-cari_melalui = st.sidebar.radio("Cari melalui:", ["NOKP", "Name"])
+cari_melalui = st.sidebar.radio("Search by:", ["NOKP", "Name"])
 
 if cari_melalui == "NOKP":
-    nokp_input = st.sidebar.text_input("Enter the 12-digit IC Number", placeholder="030807060678")
+    nokp_input = st.sidebar.text_input("Enter 12-digit IC Number", placeholder="030807060678")
 else:
     nama_input = st.sidebar.text_input("Enter full name", placeholder="NUR AELYA")
 
@@ -374,12 +415,12 @@ cari_button = st.sidebar.button("🔍 Search Student")
 # MAIN AREA
 # ============================================
 if cari_button:
-    with st.spinner("Seeking students..."):
+    with st.spinner("Searching for student..."):
         if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
-            st.error("❌ Sila masukkan NOKP")
+            st.error("❌ Please enter IC Number")
             st.stop()
         elif cari_melalui == "Name" and (not nama_input or nama_input.strip() == ""):
-            st.error("❌ Sila masukkan nama")
+            st.error("❌ Please enter name")
             st.stop()
         
         if cari_melalui == "NOKP":
@@ -389,17 +430,9 @@ if cari_button:
             pelajar = df[df['NAMA'].str.contains(nama_input, case=False, na=False)]
         
         if len(pelajar) == 0:
-            st.error("❌ Pelajar tidak dijumpai")
+            st.error("❌ Student not found")
         else:
             row = pelajar.iloc[0]
-            
-            with st.expander("🔍 Gred Penting"):
-                penting = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI']
-                data = {}
-                for subj in penting:
-                    if subj in row.index:
-                        data[subj] = f"{row[subj]} ({grade_to_numeric(row[subj])})"
-                st.json(data)
             
             # ========================================
             # LAYOUT 2 KOLOM
@@ -407,11 +440,11 @@ if cari_button:
             col_kiri, col_kanan = st.columns([1, 2])
             
             with col_kiri:
-                st.markdown("### 👤 Profil Pelajar")
+                st.markdown("### 👤 Student Profile")
                 profil_items = []
                 profil_items.append(f"<tr><td style='text-align:left'>{row['NOKP']}</td></tr>")
                 profil_items.append(f"<tr><td style='text-align:left'>{row['NAMA']}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>")
+                profil_items.append(f"<tr><td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>")
                 profil_items.append(f"<tr><td style='text-align:left'>{row.get('LOKASI', 'N/A')}</td></tr>")
                 profil_items.append(f"<tr><td style='text-align:left'>{row.get('ALIRAN', 'N/A')}</td></tr>")
                 profil_items.append(f"<tr><td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
@@ -425,7 +458,7 @@ if cari_button:
                 """, unsafe_allow_html=True)
                 
                 # SUBJEK SPM
-                st.markdown("### 📚 SPM Subjects & Grade")
+                st.markdown("### 📚 SPM Subjects")
                 subject_items = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
@@ -438,7 +471,7 @@ if cari_button:
                     st.markdown(f"""
                     <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
                     <table style='width:100%'>
-                        <tr><th>Subjek</th><th style='text-align:center'>Gred</th></tr>
+                        <tr><th>Subject</th><th style='text-align:center'>Grade</th></tr>
                         {items_to_show}
                     </table>
                     </div>
@@ -446,16 +479,17 @@ if cari_button:
                 else:
                     st.info("No subject data found")
                 
-                # PERINCIAN SKOR (DIPINDAHKAN KE SINI)
+                # PERINCIAN SKOR
                 st.markdown("### 📊 Score Details")
                 st.markdown("""
                 **Score Components:**
                 - Demographic: 10%
-                - Income: 10% (B40 > T20)
-                - Subject: 80% (purata subjek berkaitan)
-                - Bonus: +15% jika dalam pilihan asal
+                - Income: 10% (B40 higher score)
+                - Subjects: 80% (average of relevant subjects)
+                - Foundation Priority: +10% for Asasi programmes
+                - Bonus: +15% if in student's original choices
                 
-                **Qualification / Eligibility:**
+                **Eligibility:**
                 - ≥80%: Highly Suitable
                 - 60-79%: Moderately Suitable
                 - <60%: Less Suitable
@@ -477,25 +511,23 @@ if cari_button:
                         in_original = any(prog['name'].lower() in p.lower() for p in pilihan_asal)
                         if in_original:
                             skor = min(skor + 15, 100)
+                        
+                        # Dapatkan explanation untuk XAI
+                        explanation = generate_explanation(row, prog)
+                        
                         program_scores.append({
                             'name': prog['name'],
                             'cluster': prog['cluster'],
                             'group': prog['group'],
                             'score': skor,
-                            'in_original': in_original
+                            'in_original': in_original,
+                            'explanation': explanation
                         })
                 
-                st.caption(f"📊 Eligible Programs: {len(program_scores)} from {len(ALL_PROGRAMS)}")
+                st.caption(f"📊 Eligible Programs: {len(program_scores)} out of {len(ALL_PROGRAMS)}")
                 
                 if len(program_scores) == 0:
-                    st.warning("⚠️ No eligible programs / No suitable programs found.")
-                    with st.expander("🔍 Debug: All programs"):
-                        for prog in ALL_PROGRAMS:
-                            eligible, reasons = is_eligible(row, prog, debug=True)
-                            status = "✅ LAYAK" if eligible else "❌ TIDAK LAYAK"
-                            st.write(f"**{prog['name']}** - {status}")
-                            for r in reasons:
-                                st.caption(r)
+                    st.warning("⚠️ No suitable programs found.")
                 else:
                     program_scores.sort(key=lambda x: x['score'], reverse=True)
                     top5 = program_scores[:5]
@@ -510,10 +542,12 @@ if cari_button:
                         
                         star = " ⭐" if prog['in_original'] else ""
                         
+                        # Paparan dengan XAI
                         st.markdown(f"""
-                        <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {color}; border-radius: 3px;'>
+                        <div style='margin-bottom: 15px; padding: 10px; border-left: 5px solid {color}; border-radius: 3px; background-color: #f8f9fa;'>
                             <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b></span><br>
-                            <span style='font-size: 0.9em; color: {color}'><b>Suitability : {prog['score']}%</b></span>
+                            <span style='font-size: 0.9em; color: {color}'><b>Suitability: {prog['score']}%</b></span><br>
+                            <span style='font-size: 0.85em; color: #666;'><i>Why: {prog['explanation']}</i></span><br>
                             <span style='font-size: 0.8em; color: gray;'>Group {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
@@ -529,7 +563,7 @@ if cari_button:
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
                     <table style='width:100%'>
-                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>Recommend?</th></tr>
+                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In Top 5?</th></tr>
                         {''.join(table_rows)}
                     </table>
                     </div>
@@ -541,6 +575,6 @@ if cari_button:
                         if program_ditawar != 'TIDAK DITAWARKAN':
                             st.markdown(f"""
                             <div style='background-color: #28a745; padding: 10px; border-radius: 5px; margin-top: 10px;'>
-                                <span style='color: white; font-weight: bold;'>✅ Programs Offered <br> {program_ditawar}</span>
+                                <span style='color: white; font-weight: bold;'>✅ Program Offered: {program_ditawar}</span>
                             </div>
                             """, unsafe_allow_html=True)
