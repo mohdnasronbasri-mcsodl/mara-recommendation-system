@@ -532,18 +532,18 @@ if cari_button:
             with col_kiri:
                 st.markdown("### 👤 Student Profile")
                 profil_items = []
-                profil_items.append(f"<tr><td style='text-align:left'>{row['NOKP']}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row['NAMA']}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row.get('LOKASI', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row.get('ALIRAN', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
+                profil_items.append(f"\\<td style='text-align:left'>{row['NOKP']}  \\")
+                profil_items.append(f"\\<td style='text-align:left'>{row['NAMA']}  \\")
+                profil_items.append(f"\\<td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'}  \\")
+                profil_items.append(f"\\<td style='text-align:left'>{row.get('LOKASI', 'N/A')}  \\")
+                profil_items.append(f"\\<td style='text-align:left'>{row.get('ALIRAN', 'N/A')}  \\")
+                profil_items.append(f"\\<td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}  \\")
                 
                 st.markdown(f"""
                 <div style='max-height: 300px; overflow-y: auto; margin-bottom: 20px;'>
                 <table style='width:100%'>
                     {''.join(profil_items)}
-                </table>
+                \\</table>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -554,14 +554,14 @@ if cari_button:
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_items.append(f"<tr><td>{name}</td><td style='text-align:center'><b>{grade}</b></td></tr>")
+                            subject_items.append(f"\\<td style='text-align:center'><b>{grade}</b>\\")
                 
                 if subject_items:
                     items_to_show = ''.join(subject_items[:20])
                     st.markdown(f"""
                     <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
                     <table style='width:100%'>
-                        <tr><th>Subject</th><th style='text-align:center'>Grade</th></tr>
+                         <th>Subject</th><th style='text-align:center'>Grade</th>
                         {items_to_show}
                     </table>
                     </div>
@@ -596,7 +596,7 @@ if cari_button:
                 """)
             
             with col_kanan:
-                st.markdown("### 🎯 Top 5 Recommended Programs")
+                st.markdown("### 🎯 Recommended Programs (Sorted by Suitability)")
                 
                 pilihan_asal = []
                 for pil in ['PIL1', 'PIL2', 'PIL3']:
@@ -624,14 +624,16 @@ if cari_button:
                 
                 # Sort ikut score (tertinggi dulu), then priority group
                 program_scores.sort(key=lambda x: (-x['score'], x['priority']))
-                top5 = program_scores[:5]
                 
-                st.caption(f"📊 Eligible Programs: {len(program_scores)} out of {len(ALL_PROGRAMS)}")
+                # Tunjukkan SEMUA program yang layak (bukan limit 5)
+                all_eligible = program_scores
                 
-                if len(program_scores) == 0:
+                st.caption(f"📊 Eligible Programs: {len(all_eligible)} out of {len(ALL_PROGRAMS)}")
+                
+                if len(all_eligible) == 0:
                     st.warning("⚠️ No suitable programs found.")
                 else:
-                    for i, prog in enumerate(top5, 1):
+                    for i, prog in enumerate(all_eligible, 1):
                         if prog['score'] >= 80:
                             color = "#28a745"
                         elif prog['score'] >= 60:
@@ -657,12 +659,13 @@ if cari_button:
                         else:
                             group_icon = "📌"
                         
+                        # Guna background neutral untuk dark mode
                         st.markdown(f"""
-                        <div style='margin-bottom: 15px; padding: 10px; border-left: 5px solid {color}; border-radius: 3px; background-color: #f8f9fa;'>
-                            <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b> {group_icon}</span><br>
-                            <span style='font-size: 0.9em; color: {color}'><b>Suitability: {prog['score']}%</b></span><br>
-                            <span style='font-size: 0.85em; color: #444;'><i>✓ {prog['explanation']}</i></span><br>
-                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']}</span>
+                        <div style='margin-bottom: 15px; padding: 10px; border-left: 5px solid {color}; border-radius: 3px; background-color: #f0f2f6;'>
+                            <span style='font-size: 1.05em;'><b>{i}. {prog['name']}{star}</b> {group_icon}</span><br>
+                            <span style='font-size: 0.85em; color: {color};'><b>Suitability: {prog['score']}%</b></span><br>
+                            <span style='font-size: 0.8em; color: #444;'><i>✓ {prog['explanation']}</i></span><br>
+                            <span style='font-size: 0.7em; color: gray;'>Group {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -670,14 +673,14 @@ if cari_button:
                     st.markdown("### 📋 Student's Original Choices")
                     table_rows = []
                     for i, p in enumerate(pilihan_asal, 1):
-                        in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
-                        status = "✅" if in_top5 else "❌"
-                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
+                        in_list = any(p.lower() in prog['name'].lower() for prog in all_eligible)
+                        status = "✅" if in_list else "❌"
+                        table_rows.append(f"\\<td style='text-align:center'>PIL{i} <td>{p}<td style='text-align:center'>{status}\\")
                     
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
                     <table style='width:100%'>
-                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In Top 5?</th></tr>
+                         <th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In List?</th>
                         {''.join(table_rows)}
                     </table>
                     </div>
@@ -703,9 +706,9 @@ if cari_button:
                     # Kumpul program yang TIDAK layak
                     not_eligible_programs = []
                     for prog in ALL_PROGRAMS:
-                        # Check sama ada program ni dalam top5
-                        in_top5 = any(prog['name'] == p['name'] for p in top5)
-                        if not in_top5:
+                        # Check sama ada program ni dalam list eligible
+                        in_eligible = any(prog['name'] == p['name'] for p in all_eligible)
+                        if not in_eligible:
                             # Check kelayakan (function is_eligible return boolean)
                             eligible = is_eligible(row, prog, debug=False)
                             if not eligible:
@@ -784,11 +787,12 @@ if cari_button:
                             else:
                                 group_icon = "📚"
                             
+                            # Guna background neutral untuk dark mode
                             st.markdown(f"""
-                            <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {group_color}; border-radius: 3px; background-color: #f2f2f2;'>
-                                <span style='font-size: 0.95em;'><b>{prog['name']}</b> {group_icon}</span><br>
-                                <span style='font-size: 0.8em; color: #dc3545;'><b>❌ Not eligible:</b> {', '.join(prog['reasons'])}</span><br>
-                                <span style='font-size: 0.75em; color: gray;'>Group {prog['group']}</span>
+                            <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {group_color}; border-radius: 3px; background-color: #f0f2f6;'>
+                                <span style='font-size: 0.9em;'><b>{prog['name']}</b> {group_icon}</span><br>
+                                <span style='font-size: 0.75em; color: #dc3545;'><b>❌ Not eligible:</b> {', '.join(prog['reasons'])}</span><br>
+                                <span style='font-size: 0.7em; color: gray;'>Group {prog['group']}</span>
                             </div>
                             """, unsafe_allow_html=True)
                     else:
