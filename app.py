@@ -111,7 +111,7 @@ def generate_explanation(row, program):
         if bi >= 75:
             reasons.append(f"BI {row.get('BI', '')} (≥B)")
         
-        return "Eligible for CS + Certification: " + ", ".join(reasons) if reasons else "Eligible for CS + Certification"
+        return "Eligible for DCS/DMK + Cert: " + ", ".join(reasons) if reasons else "Eligible for DCS/DMK + Cert"
     
     elif group == 3:  # Computer Science Basic
         math = grade_to_numeric(row.get('MAT', 0))
@@ -568,17 +568,18 @@ if cari_button:
                 - Demographic: 10%
                 - Income: 10% (B40 higher score)
                 - Subjects: 80% (average of relevant subjects)
-                - Group Priority: Higher groups get bonus (Asasi +20%, etc)
+                - Group Priority: Higher groups get bonus (Foundation +20%, etc)
                 - Bonus: +15% if in student's original choices
                 
-                **Priority Order:**<br>
+                **Priority Order:**
+                
                 1️⃣ Group 7 (Asasi) - Tertinggi  
                 2️⃣ Group 6 (Accounting + SAP)  
-                3️⃣ Group 2 (CS + Certification)  
+                3️⃣ Group 2 (CS/MK + Certification)  
                 4️⃣ Group 3 (CS Basic)  
                 5️⃣ Group 4 (English)  
                 6️⃣ Group 5 (Accounting Basic)  
-                7️⃣ Group 1 (Business, Logistics) - Terendah
+                7️⃣ Group 1 (Business, Logistics, Creative) - Terendah
                 
                 **Eligibility:**
                 - ≥80%: Highly Suitable
@@ -655,7 +656,7 @@ if cari_button:
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
                         status = "✅" if in_top5 else "❌"
-                        status_text = "In Top 5" if in_top5 else "Not in Top 5"
+                        status_text = "" if in_top5 else ""
                         table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}<br><small>{status_text}</small></td></tr>")
                     
                     st.markdown(f"""
