@@ -341,19 +341,27 @@ if search_button:
             with col_left:
                 st.markdown("### 👤 Student Profile")
                 
-                # Profile without labels (just data)
+                # Profile in ROW format (list going down)
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px;'>
                 <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
-                     <td style='padding: 6px; color: #000000;'>{row['NOKP']}</td>
-                     <td style='padding: 6px; color: #000000;'>{row['NAMA']}</td>
-                     <td style='padding: 6px; color: #000000;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td>
-                     <td style='padding: 6px; color: #000000;'>{row.get('LOKASI', 'N/A')}</td>
-                     <td style='padding: 6px; color: #000000;'>{row.get('ALIRAN', 'N/A')}</td>
-                     <td style='padding: 6px; color: #000000;'>RM {row.get('PENDAPATAN', 0):,.0f}</td>
+                    <tr><td style='padding: 6px; color: #000000;'>{row['NOKP']}</td></tr>
+                    <tr><td style='padding: 6px; color: #000000;'>{row['NAMA']}</td></tr>
+                    <tr><td style='padding: 6px; color: #000000;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                    <tr><td style='padding: 6px; color: #000000;'>{row.get('LOKASI', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px; color: #000000;'>{row.get('ALIRAN', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px; color: #000000;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
                 </table>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                # ========================================
+                # NOT OFFERED NOTE (if applicable)
+                # ========================================
+                if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
+                    program_offered = str(row['KURSUSJAYA']).strip()
+                    if program_offered == 'TIDAK DITAWARKAN':
+                        st.info("❌ Student was not offered any program.\n\nThis may be due to quota limitations or the student not meeting the required criteria.")
                 
                 # SPM Subjects
                 st.markdown("### 📚 SPM Subjects")
@@ -485,12 +493,13 @@ if search_button:
                         </div>
                         """, unsafe_allow_html=True)
                 
-                # Offered Program
+                # Offered Program (already shown in left column for "TIDAK DITAWARKAN")
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                     program_offered = str(row['KURSUSJAYA']).strip()
-                    offered_info = check_offered_program(program_offered, original_choices)
-                    if offered_info:
-                        if offered_info['type'] == 'success':
-                            st.success(offered_info['message'])
-                        else:
-                            st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
+                    if program_offered != 'TIDAK DITAWARKAN':
+                        offered_info = check_offered_program(program_offered, original_choices)
+                        if offered_info:
+                            if offered_info['type'] == 'success':
+                                st.success(offered_info['message'])
+                            else:
+                                st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
