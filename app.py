@@ -531,41 +531,45 @@ if cari_button:
             
             with col_kiri:
                 st.markdown("### 👤 Student Profile")
-                profil_items = []
-                profil_items.append(f"\\<td style='text-align:left'>{row['NOKP']}  \\")
-                profil_items.append(f"\\<td style='text-align:left'>{row['NAMA']}  \\")
-                profil_items.append(f"\\<td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'}  \\")
-                profil_items.append(f"\\<td style='text-align:left'>{row.get('LOKASI', 'N/A')}  \\")
-                profil_items.append(f"\\<td style='text-align:left'>{row.get('ALIRAN', 'N/A')}  \\")
-                profil_items.append(f"\\<td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}  \\")
                 
-                st.markdown(f"""
-                <div style='max-height: 300px; overflow-y: auto; margin-bottom: 20px;'>
-                <table style='width:100%'>
-                    {''.join(profil_items)}
-                \\</table>
+                # Profil dalam table dengan background neutral
+                profil_html = """
+                <div style='background-color: #f0f2f6; padding: 5px; border-radius: 5px; margin-bottom: 20px;'>
+                <table style='width:100%; border-collapse: collapse;'>
+                """
+                profil_html += f"<tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td></tr>"
+                profil_html += f"<tr><td style='padding: 6px;'><b>Nama</b></td><td style='padding: 6px;'>{row['NAMA']}</td></tr>"
+                profil_html += f"<tr><td style='padding: 6px;'><b>Jantina</b></td><td style='padding: 6px;'>{'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'}</td></tr>"
+                profil_html += f"<tr><td style='padding: 6px;'><b>Lokasi</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>"
+                profil_html += f"<tr><td style='padding: 6px;'><b>Aliran</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>"
+                profil_html += f"<tr><td style='padding: 6px;'><b>Pendapatan</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>"
+                profil_html += """
+                </table>
                 </div>
-                """, unsafe_allow_html=True)
+                """
+                st.markdown(profil_html, unsafe_allow_html=True)
                 
                 # SUBJEK SPM
                 st.markdown("### 📚 SPM Subjects")
-                subject_items = []
+                
+                # Kumpul subjek yang ada
+                subject_rows = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_items.append(f"\\<td style='text-align:center'><b>{grade}</b>\\")
+                            subject_rows.append(f"<tr><td style='padding: 4px;'>{name}</td><td style='text-align:center; padding: 4px;'><b>{grade}</b></td></tr>")
                 
-                if subject_items:
-                    items_to_show = ''.join(subject_items[:20])
-                    st.markdown(f"""
-                    <div style='font-size: 0.9em; max-height: 400px; overflow-y: auto'>
-                    <table style='width:100%'>
-                         <th>Subject</th><th style='text-align:center'>Grade</th>
-                        {items_to_show}
+                if subject_rows:
+                    subjects_html = f"""
+                    <div style='background-color: #f0f2f6; padding: 5px; border-radius: 5px; max-height: 400px; overflow-y: auto;'>
+                    <table style='width:100%; border-collapse: collapse;'>
+                        <tr><th style='text-align:left; padding: 6px;'>Subject</th><th style='text-align:center; padding: 6px;'>Grade</th></tr>
+                        {''.join(subject_rows[:20])}
                     </table>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """
+                    st.markdown(subjects_html, unsafe_allow_html=True)
                 else:
                     st.info("No subject data found")
                 
@@ -625,7 +629,7 @@ if cari_button:
                 # Sort ikut score (tertinggi dulu), then priority group
                 program_scores.sort(key=lambda x: (-x['score'], x['priority']))
                 
-                # Tunjukkan SEMUA program yang layak (bukan limit 5)
+                # Tunjukkan SEMUA program yang layak
                 all_eligible = program_scores
                 
                 st.caption(f"📊 Eligible Programs: {len(all_eligible)} out of {len(ALL_PROGRAMS)}")
@@ -675,12 +679,12 @@ if cari_button:
                     for i, p in enumerate(pilihan_asal, 1):
                         in_list = any(p.lower() in prog['name'].lower() for prog in all_eligible)
                         status = "✅" if in_list else "❌"
-                        table_rows.append(f"\\<td style='text-align:center'>PIL{i} <td>{p}<td style='text-align:center'>{status}\\")
+                        table_rows.append(f"<tr><td style='text-align:center'>{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
                     
                     st.markdown(f"""
-                    <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
-                    <table style='width:100%'>
-                         <th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In List?</th>
+                    <div style='background-color: #f0f2f6; padding: 5px; border-radius: 5px; max-height: 200px; overflow-y: auto;'>
+                    <table style='width:100%; border-collapse: collapse;'>
+                        <tr><th style='text-align:center'>Choice</th><th>Program</th><th style='text-align:center'>In List?</th></tr>
                         {''.join(table_rows)}
                     </table>
                     </div>
