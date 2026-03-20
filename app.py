@@ -87,7 +87,7 @@ ALL_PROGRAMS = [
         }
     },
     {
-        'name': 'Diploma in Islamic Finance + Associate Qualification',
+        'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance',
         'cluster': 'Islamic Finance',
         'group': 1,
         'syarat': {
