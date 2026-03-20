@@ -478,8 +478,7 @@ def check_offered_program(program_ditawar, pilihan_asal):
             return f"✅ Programs Offered: {program_ditawar} (PIL{i})"
     
     # Kalau takde dalam pilihan 1-3
-    return f"✅ Programs Offered: {program_ditawar}\n\n📝 Note: This program may be choices 4-12 in the full UPUOnline list. In the MARA system, 
-    students can choose up to 12 programs, and an offer can be made for any choice that meets the requirements"
+    return f"✅ Programs Offered: {program_ditawar}\n\n📝 Note: This program may be choices 4-12 in the full UPUOnline list. In the MARA system, students can choose up to 12 programs, and an offer can be made for any choice that meets the requirements"
 
 # ============================================
 # SIDEBAR PENCARIAN
