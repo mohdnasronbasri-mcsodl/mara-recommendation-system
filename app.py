@@ -3,17 +3,17 @@ import pandas as pd
 import joblib
 import numpy as np
 
-# Konfigurasi halaman
+# Page config
 st.set_page_config(
     page_title="MARA Program Recommendation",
     page_icon="🎓",
     layout="wide"
 )
 
-# Tajuk
+# Title
 st.title("🎓 MARA Program Recommendation System")
 
-# Load model dan data
+# Load model and data
 @st.cache_resource
 def load_model_and_data():
     model = joblib.load('mara_model.pkl')
@@ -24,7 +24,7 @@ model, df = load_model_and_data()
 feature_names = list(model.feature_names_in_)
 
 # ============================================
-# KAMUS SUBJEK SPM
+# SPM SUBJECT DICTIONARY
 # ============================================
 SUBJECT_NAMES = {
     'BM': 'BAHASA MELAYU', 'BI': 'BAHASA INGGERIS', 'PI': 'PENDIDIKAN ISLAM',
@@ -37,7 +37,7 @@ SUBJECT_NAMES = {
 }
 
 # ============================================
-# FUNGSI GRADE KE NUMERIK
+# GRADE TO NUMERIC FUNCTION
 # ============================================
 def grade_to_numeric(grade):
     if pd.isna(grade) or grade == 'NA' or grade == '':
@@ -58,49 +58,49 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# FUNGSI SEMAK KELAYAKAN (VERSI BETUL)
+# CHECK ELIGIBILITY
 # ============================================
 def is_eligible(row, program):
     syarat = program.get('syarat', {})
     
-    # Semak Sejarah
+    # History
     sejarah = grade_to_numeric(row.get('SEJ', 0))
     if sejarah < syarat.get('SEJ', 40):
-        return False
+        return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ {syarat.get('SEJ', 40)})"
     
-    # Semak BM
+    # BM
     bm = grade_to_numeric(row.get('BM', 0))
     if bm < syarat.get('BM', 60):
-        return False
+        return False, f"BM: {row.get('BM', 'N/A')} (need ≥ {syarat.get('BM', 60)})"
     
-    # Semak Math
+    # Math
     math = grade_to_numeric(row.get('MAT', 0))
     if math < syarat.get('MAT', 0):
-        return False
+        return False, f"Math: {row.get('MAT', 'N/A')} (need ≥ {syarat.get('MAT', 0)})"
     
-    # Semak BI
+    # English
     bi = grade_to_numeric(row.get('BI', 0))
     if 'BI' in syarat:
         if bi < syarat['BI']:
-            return False
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ {syarat['BI']})"
     elif 'BI_min' in syarat:
         if bi < syarat['BI_min']:
-            return False
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ {syarat['BI_min']})"
     
-    # Semak M-T (jika ada)
+    # Additional Math
     if 'M-T' in syarat:
         mt = grade_to_numeric(row.get('M-T', 0))
         if mt < syarat['M-T']:
-            return False
+            return False, f"Add Math: {row.get('M-T', 'N/A')} (need ≥ {syarat['M-T']})"
     
-    # Semak sains_min (Fizik atau Kimia)
+    # Science (Physics or Chemistry)
     if 'sains_min' in syarat:
         fizik = grade_to_numeric(row.get('FIZ', 0))
         kim = grade_to_numeric(row.get('KIM', 0))
         if max(fizik, kim) < syarat['sains_min']:
-            return False
+            return False, f"Physics/Chemistry: best = {max(fizik, kim)} (need ≥ {syarat['sains_min']})"
     
-    # Semak other subjects
+    # Other subjects
     if 'other_count' in syarat:
         wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
         other_subjects = [col for col in row.index if col not in wajib and col in SUBJECT_NAMES]
@@ -109,59 +109,59 @@ def is_eligible(row, program):
             if grade_to_numeric(row[subj]) >= syarat['other_min']:
                 other_pass += 1
         if other_pass < syarat['other_count']:
-            return False
+            return False, f"Only {other_pass}/{syarat['other_count']} other subjects ≥ {syarat['other_min']}"
     
-    return True
+    return True, ""
 
 # ============================================
-# FUNGSI HITUNG SKOR
+# CALCULATE SCORE
 # ============================================
-def hitung_skor(row, program):
-    skor = 0
-    total_bobot = 0
+def calculate_score(row, program):
+    score = 0
+    total_weight = 0
     
-    # Demografi (10%)
-    skor += 10
-    total_bobot += 10
+    # Demographic (10%)
+    score += 10
+    total_weight += 10
     
-    # Pendapatan (10%)
-    pendapatan = row.get('PENDAPATAN', 5000)
-    if pendapatan < 3000:
-        skor += 10
-    elif pendapatan < 5000:
-        skor += 8
-    elif pendapatan < 8000:
-        skor += 6
+    # Income (10%)
+    income = row.get('PENDAPATAN', 5000)
+    if income < 3000:
+        score += 10
+    elif income < 5000:
+        score += 8
+    elif income < 8000:
+        score += 6
     else:
-        skor += 4
-    total_bobot += 10
+        score += 4
+    total_weight += 10
     
-    # Subjek (80%)
-    subjek_count = 0
-    subjek_total = 0
+    # Subjects (80%)
+    subject_count = 0
+    subject_total = 0
     syarat = program.get('syarat', {})
-    all_subjek = []
+    all_subjects = []
     for key in syarat:
         if key in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
-            all_subjek.append(key)
+            all_subjects.append(key)
     
-    unique_subjek = list(set(all_subjek))
+    unique_subjects = list(set(all_subjects))
     
-    for subj in unique_subjek:
+    for subj in unique_subjects:
         if subj in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
-            nilai = grade_to_numeric(row.get(subj, 0))
-            if nilai > 0:
-                subjek_total += nilai
-                subjek_count += 1
+            value = grade_to_numeric(row.get(subj, 0))
+            if value > 0:
+                subject_total += value
+                subject_count += 1
     
-    if subjek_count > 0:
-        purata = subjek_total / subjek_count
-        skor += purata * 0.8
-        total_bobot += 80
+    if subject_count > 0:
+        average = subject_total / subject_count
+        score += average * 0.8
+        total_weight += 80
     
-    base_score = skor / total_bobot * 100 if total_bobot > 0 else 50
+    base_score = score / total_weight * 100 if total_weight > 0 else 50
     
-    # Bonus group priority
+    # Group priority bonus
     priority_bonus = {7: 20, 6: 15, 2: 12, 3: 10, 4: 8, 5: 5, 1: 0}
     bonus = priority_bonus.get(program.get('group', 1), 0)
     base_score = min(base_score + bonus, 100)
@@ -169,7 +169,7 @@ def hitung_skor(row, program):
     return round(base_score, 1)
 
 # ============================================
-# FUNGSI PENJELASAN (XAI)
+# GENERATE EXPLANATION
 # ============================================
 def generate_explanation(row, program):
     group = program.get('group', 0)
@@ -179,12 +179,12 @@ def generate_explanation(row, program):
         if grade_to_numeric(row.get('M-T', 0)) >= 75:
             reasons.append(f"Add Math {row.get('M-T', '')} (≥B)")
         if grade_to_numeric(row.get('FIZ', 0)) >= 75:
-            reasons.append(f"Fizik {row.get('FIZ', '')} (≥B)")
+            reasons.append(f"Physics {row.get('FIZ', '')} (≥B)")
         if grade_to_numeric(row.get('KIM', 0)) >= 75:
-            reasons.append(f"Kimia {row.get('KIM', '')} (≥B)")
+            reasons.append(f"Chemistry {row.get('KIM', '')} (≥B)")
         if reasons:
-            return "Layak Asasi: " + ", ".join(reasons[:3])
-        return "Layak Asasi (syarat minimum dipenuhi)"
+            return "Eligible for Foundation: " + ", ".join(reasons[:3])
+        return "Eligible for Foundation (minimum requirements met)"
     
     elif group == 6:
         if grade_to_numeric(row.get('ACC', 0)) >= 75:
@@ -192,32 +192,32 @@ def generate_explanation(row, program):
         if grade_to_numeric(row.get('MAT', 0)) >= 75:
             reasons.append(f"Math {row.get('MAT', '')} (≥B)")
         if reasons:
-            return "Layak Accounting + SAP: " + ", ".join(reasons)
-        return "Layak Accounting + SAP"
+            return "Eligible for Accounting + SAP: " + ", ".join(reasons)
+        return "Eligible for Accounting + SAP"
     
     elif group == 2:
         if grade_to_numeric(row.get('MAT', 0)) >= 75:
             reasons.append(f"Math {row.get('MAT', '')} (≥B)")
         if grade_to_numeric(row.get('BI', 0)) >= 75:
-            reasons.append(f"BI {row.get('BI', '')} (≥B)")
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
         if reasons:
-            return "Layak CS/MK + Sijil: " + ", ".join(reasons)
-        return "Layak CS/MK + Sijil"
+            return "Eligible for CS/Marketing + Certification: " + ", ".join(reasons)
+        return "Eligible for CS/Marketing + Certification"
     
     elif group == 3:
         if grade_to_numeric(row.get('MAT', 0)) >= 60:
             reasons.append(f"Math {row.get('MAT', '')} (≥C)")
-        return "Layak CS Asas: " + ", ".join(reasons) if reasons else "Layak CS Asas"
+        return "Eligible for CS Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
     
     elif group == 4:
         if grade_to_numeric(row.get('BI', 0)) >= 75:
-            reasons.append(f"BI {row.get('BI', '')} (≥B)")
-        return "Layak English: " + ", ".join(reasons) if reasons else "Layak English"
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
+        return "Eligible for English Communication: " + ", ".join(reasons) if reasons else "Eligible for English Communication"
     
     elif group == 5:
         if grade_to_numeric(row.get('MAT', 0)) >= 60:
             reasons.append(f"Math {row.get('MAT', '')} (≥C)")
-        return "Layak Perakaunan Asas: " + ", ".join(reasons) if reasons else "Layak Perakaunan Asas"
+        return "Eligible for Accounting Basic: " + ", ".join(reasons) if reasons else "Eligible for Accounting Basic"
     
     else:  # Group 1
         if grade_to_numeric(row.get('BM', 0)) >= 60:
@@ -227,223 +227,197 @@ def generate_explanation(row, program):
             if grade_to_numeric(row.get(subj, 0)) >= 60:
                 other_count += 1
         if other_count >= 2:
-            reasons.append(f"{other_count} subjek lain ≥C")
-        return "Layak Program Umum: " + ", ".join(reasons) if reasons else "Layak Program Umum"
+            reasons.append(f"{other_count} other subjects ≥C")
+        return "Eligible for General Programs: " + ", ".join(reasons) if reasons else "Eligible for General Programs"
 
 # ============================================
-# SENARAI PROGRAM DENGAN SYARAT TERKINI
+# ALL PROGRAMS
 # ============================================
 ALL_PROGRAMS = [
-    # ========== GROUP 1 ==========
-    {
-        'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Halal Industry + Halal Executive Certification',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Business Studies',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Business Information Technology',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in International Business',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Creative Digital Media Production',
-        'group': 1,
-        'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}
-    },
+    # GROUP 1
+    {'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Halal Industry + Halal Executive Certification', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Business Studies', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Business Information Technology', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in International Business', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Creative Digital Media Production', 'group': 1,
+     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
     
-    # ========== GROUP 2 ==========
-    {
-        'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification',
-        'group': 2,
-        'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}
-    },
-    {
-        'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification',
-        'group': 2,
-        'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}
-    },
+    # GROUP 2
+    {'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification', 'group': 2,
+     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}},
+    {'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification', 'group': 2,
+     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}},
     
-    # ========== GROUP 3 ==========
-    {
-        'name': 'Diploma in Computer Science',
-        'group': 3,
-        'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 3, 'other_min': 60}
-    },
+    # GROUP 3
+    {'name': 'Diploma in Computer Science', 'group': 3,
+     'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 3, 'other_min': 60}},
     
-    # ========== GROUP 4 ==========
-    {
-        'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM',
-        'group': 4,
-        'syarat': {'BM': 60, 'BI': 75, 'MAT': 40, 'SEJ': 40, 'other_count': 1, 'other_min': 60}
-    },
+    # GROUP 4
+    {'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM', 'group': 4,
+     'syarat': {'BM': 60, 'BI': 75, 'MAT': 40, 'SEJ': 40, 'other_count': 1, 'other_min': 60}},
     
-    # ========== GROUP 5 ==========
-    {
-        'name': 'Diploma in Accounting',
-        'group': 5,
-        'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 1, 'other_min': 60}
-    },
+    # GROUP 5
+    {'name': 'Diploma in Accounting', 'group': 5,
+     'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 1, 'other_min': 60}},
     
-    # ========== GROUP 6 ==========
-    {
-        'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification',
-        'group': 6,
-        'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 1, 'other_min': 60}
-    },
+    # GROUP 6
+    {'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification', 'group': 6,
+     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 1, 'other_min': 60}},
     
-    # ========== GROUP 7 ==========
-    {
-        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia',
-        'group': 7,
-        'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}
-    },
-    {
-        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah',
-        'group': 7,
-        'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}
-    }
+    # GROUP 7
+    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia', 'group': 7,
+     'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}},
+    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah', 'group': 7,
+     'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}},
 ]
 
 # ============================================
-# FUNGSI CHECK PROGRAM DITAWAR
+# CHECK OFFERED PROGRAM
 # ============================================
-def check_offered_program(program_ditawar, pilihan_asal):
+def check_offered_program(program_ditawar, original_choices):
     if program_ditawar == 'TIDAK DITAWARKAN' or pd.isna(program_ditawar):
         return None
     
-    for i, p in enumerate(pilihan_asal, 1):
+    for i, p in enumerate(original_choices, 1):
         if program_ditawar.lower() in p.lower():
-            return {'type': 'success', 'message': f"✅ Program Ditawar: {program_ditawar} (Pilihan {i})"}
+            return {'type': 'success', 'message': f"✅ Program Offered: {program_ditawar} (Choice {i})"}
     
     return {
         'type': 'info',
-        'message': f"✅ Program Ditawar: {program_ditawar}",
-        'note': "📝 Nota: Program ini mungkin dalam pilihan 4-12 dalam senarai penuh UPUOnline."
+        'message': f"✅ Program Offered: {program_ditawar}",
+        'note': "📝 Note: This program may be among choices 4-12 in the full UPUOnline list."
     }
 
 # ============================================
-# SIDEBAR PENCARIAN
+# SIDEBAR
 # ============================================
-st.sidebar.header("🔍 Cari Pelajar")
-cari_melalui = st.sidebar.radio("Cari melalui:", ["NOKP", "Nama"])
+st.sidebar.header("🔍 Search Student")
+search_by = st.sidebar.radio("Search by:", ["NOKP", "Name"])
 
-if cari_melalui == "NOKP":
-    nokp_input = st.sidebar.text_input("Masukkan 12 digit NOKP", placeholder="030807060678")
+if search_by == "NOKP":
+    nokp_input = st.sidebar.text_input("Enter 12-digit IC Number", placeholder="030807060678")
 else:
-    nama_input = st.sidebar.text_input("Masukkan nama penuh", placeholder="NUR AELYA")
+    name_input = st.sidebar.text_input("Enter full name", placeholder="NUR AELYA")
 
-cari_button = st.sidebar.button("🔍 Cari Pelajar")
+search_button = st.sidebar.button("🔍 Search Student")
 
 # ============================================
 # MAIN AREA
 # ============================================
-if cari_button:
-    with st.spinner("Mencari pelajar..."):
-        if cari_melalui == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
-            st.error("❌ Sila masukkan NOKP")
+if search_button:
+    with st.spinner("Searching for student..."):
+        if search_by == "NOKP" and (not nokp_input or nokp_input.strip() == ""):
+            st.error("❌ Please enter IC Number")
             st.stop()
-        elif cari_melalui == "Nama" and (not nama_input or nama_input.strip() == ""):
-            st.error("❌ Sila masukkan nama")
+        elif search_by == "Name" and (not name_input or name_input.strip() == ""):
+            st.error("❌ Please enter name")
             st.stop()
         
-        if cari_melalui == "NOKP":
-            pelajar = df[df['NOKP'].astype(str).str.contains(nokp_input, na=False)]
+        if search_by == "NOKP":
+            student = df[df['NOKP'].astype(str).str.contains(nokp_input, na=False)]
         else:
             df['NAMA'] = df['NAMA'].fillna('')
-            pelajar = df[df['NAMA'].str.contains(nama_input, case=False, na=False)]
+            student = df[df['NAMA'].str.contains(name_input, case=False, na=False)]
         
-        if len(pelajar) == 0:
-            st.error("❌ Pelajar tidak dijumpai")
+        if len(student) == 0:
+            st.error("❌ Student not found")
         else:
-            row = pelajar.iloc[0]
+            row = student.iloc[0]
             
-            # ========================================
-            # LAYOUT 2 KOLOM
-            # ========================================
-            col_kiri, col_kanan = st.columns([1, 2])
+            col_left, col_right = st.columns([1, 2])
             
-            with col_kiri:
-                st.markdown("### 👤 Profil Pelajar")
+            with col_left:
+                st.markdown("### 👤 Student Profile")
                 
-                # Profil dalam table
+                # Profile without labels (just data)
                 st.markdown(f"""
-| | |
-|---|---|
-| **NOKP** | {row['NOKP']} |
-| **Nama** | {row['NAMA']} |
-| **Jantina** | {'Perempuan' if row.get('JANTINA')=='P' else 'Lelaki'} |
-| **Lokasi** | {row.get('LOKASI', 'N/A')} |
-| **Aliran** | {row.get('ALIRAN', 'N/A')} |
-| **Pendapatan** | RM {row.get('PENDAPATAN', 0):,.0f} |
-                """)
+                <div style='background-color: #f0f2f6; padding: 10px; border-radius: 8px; margin-bottom: 20px;'>
+                <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
+                    <tr><td style='padding: 6px;'>{row['NOKP']}</td></tr>
+                    <tr><td style='padding: 6px;'>{row['NAMA']}</td></tr>
+                    <tr><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                    <tr><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                </table>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                # SUBJEK SPM
-                st.markdown("### 📚 Subjek SPM")
+                # SPM Subjects
+                st.markdown("### 📚 SPM Subjects")
                 
                 subject_data = []
                 for code, name in SUBJECT_NAMES.items():
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_data.append({"Subjek": name, "Gred": grade})
+                            subject_data.append({"Subject": name, "Grade": grade})
                 
                 if subject_data:
                     df_subjects = pd.DataFrame(subject_data)
-                    st.dataframe(df_subjects, use_container_width=True, hide_index=True)
+                    # Center the Grade column
+                    st.dataframe(df_subjects.style.set_properties(**{'text-align': 'center'}, subset=['Grade']), 
+                                use_container_width=True, hide_index=True)
                 else:
-                    st.info("Tiada data subjek")
+                    st.info("No subject data found")
                 
-                # PERINCIAN SKOR
-                st.markdown("### 📊 Perincian Skor")
+                # Score Details
+                st.markdown("### 📊 Score Details")
                 st.markdown("""
-**Komponen Skor:**
-- Demografi: 10%
-- Pendapatan: 10% (B40 > T20)
-- Subjek: 80% (purata subjek berkaitan)
-- Bonus Kumpulan: Asasi +20%, Accounting+SAP +15%, dsb
-- Bonus: +15% jika dalam pilihan asal
+**Score Components:**
+- Demographic: 10%
+- Income: 10% (B40 higher score)
+- Subjects: 80% (average of relevant subjects)
+- Group Priority: Bonus (Foundation +20%, etc)
+- Bonus: +15% if in student's original choices
 
-**Kelayakan:**
-- ≥80%: Sangat sesuai
-- 60-79%: Sederhana sesuai
-- <60%: Kurang sesuai
+**Eligibility:**
+- ≥80%: Highly Suitable
+- 60-79%: Moderately Suitable
+- <60%: Less Suitable
                 """)
             
-            with col_kanan:
-                st.markdown("### 🎯 Cadangan Program")
-                
-                pilihan_asal = []
+            with col_right:
+                # Get original choices
+                original_choices = []
                 for pil in ['PIL1', 'PIL2', 'PIL3']:
                     if pil in row.index and pd.notna(row[pil]):
-                        pilihan_asal.append(str(row[pil]).strip())
+                        original_choices.append(str(row[pil]).strip())
                 
-                # Kumpul SEMUA program
+                # ========================================
+                # ORIGINAL CHOICES (ABOVE)
+                # ========================================
+                st.markdown("### 📋 Student's Original Choices")
+                choice_rows = []
+                for i, p in enumerate(original_choices, 1):
+                    choice_rows.append([f"Choice {i}", p])
+                
+                if choice_rows:
+                    df_choices = pd.DataFrame(choice_rows, columns=["Choice", "Program"])
+                    st.dataframe(df_choices, use_container_width=True, hide_index=True)
+                else:
+                    st.info("No original choices recorded")
+                
+                # ========================================
+                # PROGRAM RECOMMENDATIONS (BELOW)
+                # ========================================
+                st.markdown("### 🎯 Program Recommendations")
+                
+                # Evaluate ALL programs
                 all_programs = []
                 
                 for prog in ALL_PROGRAMS:
-                    eligible = is_eligible(row, prog)
-                    score = hitung_skor(row, prog) if eligible else 0
-                    in_original = any(prog['name'].lower() in p.lower() for p in pilihan_asal)
+                    eligible, reason = is_eligible(row, prog)
+                    score = calculate_score(row, prog) if eligible else 0
+                    in_original = any(prog['name'].lower() in p.lower() for p in original_choices)
                     if in_original and eligible:
                         score = min(score + 15, 100)
                     
@@ -453,13 +427,14 @@ if cari_button:
                         'score': score,
                         'eligible': eligible,
                         'in_original': in_original,
-                        'explanation': generate_explanation(row, prog) if eligible else ""
+                        'explanation': generate_explanation(row, prog) if eligible else "",
+                        'reason': reason if not eligible else ""
                     })
                 
-                # Susun ikut skor tertinggi
+                # Sort by score (highest first)
                 all_programs.sort(key=lambda x: -x['score'])
                 
-                st.caption(f"📊 Jumlah program: {len(all_programs)}")
+                st.caption(f"📊 Total programs: {len(all_programs)}")
                 
                 for i, prog in enumerate(all_programs, 1):
                     if prog['eligible']:
@@ -473,39 +448,27 @@ if cari_button:
                         star = " ⭐" if prog['in_original'] else ""
                         
                         st.markdown(f"""
-                        <div style='margin-bottom: 12px; padding: 10px; border-left: 5px solid {color}; border-radius: 5px; background-color: white; border: 1px solid #e0e0e0;'>
-                            <span style='font-size: 1em;'><b>{i}. {prog['name']}{star}</b></span><br>
-                            <span style='font-size: 0.85em; color: {color};'><b>Kesesuaian: {prog['score']}%</b></span><br>
-                            <span style='font-size: 0.75em; color: #555;'><i>✓ {prog['explanation']}</i></span><br>
-                            <span style='font-size: 0.7em; color: gray;'>Kumpulan {prog['group']}</span>
+                        <div style='margin-bottom: 12px; padding: 10px; border-left: 5px solid {color}; border-radius: 5px; background-color: #ffffff; border: 1px solid #e0e0e0;'>
+                            <span style='font-size: 1em; color: #000000;'><b>{i}. {prog['name']}{star}</b></span><br>
+                            <span style='font-size: 0.85em; color: {color};'><b>Suitability: {prog['score']}%</b></span><br>
+                            <span style='font-size: 0.75em; color: #555555;'><i>✓ {prog['explanation']}</i></span><br>
+                            <span style='font-size: 0.7em; color: #888888;'>Group {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     else:
-                        # Program tak layak
+                        # Not eligible with detailed reason
                         st.markdown(f"""
-                        <div style='margin-bottom: 8px; padding: 8px; border-left: 5px solid #dc3545; border-radius: 5px; background-color: white; border: 1px solid #e0e0e0;'>
-                            <span style='font-size: 0.9em;'><b>{i}. {prog['name']}</b></span><br>
-                            <span style='font-size: 0.75em; color: #dc3545;'><b>❌ Tidak layak</b></span>
+                        <div style='margin-bottom: 8px; padding: 8px; border-left: 5px solid #dc3545; border-radius: 5px; background-color: #ffffff; border: 1px solid #e0e0e0;'>
+                            <span style='font-size: 0.9em; color: #000000;'><b>{i}. {prog['name']}</b></span><br>
+                            <span style='font-size: 0.75em; color: #dc3545;'><b>❌ Not eligible:</b> {prog['reason']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                 
-                # PILIHAN ASAL
-                st.markdown("### 📋 Pilihan Asal Pelajar")
-                choice_rows = []
-                for i, p in enumerate(pilihan_asal, 1):
-                    in_list = any(p.lower() in prog['name'].lower() for prog in all_programs if prog['eligible'])
-                    status = "✅ Dalam cadangan" if in_list else "❌ Tidak dalam cadangan"
-                    choice_rows.append([f"PIL{i}", p, status])
-                
-                if choice_rows:
-                    df_choices = pd.DataFrame(choice_rows, columns=["Pilihan", "Program", "Status"])
-                    st.dataframe(df_choices, use_container_width=True, hide_index=True)
-                
-                # PROGRAM DITAWAR
+                # Offered Program
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
-                    program_ditawar = str(row['KURSUSJAYA']).strip()
-                    if program_ditawar != 'TIDAK DITAWARKAN':
-                        offered_info = check_offered_program(program_ditawar, pilihan_asal)
+                    program_offered = str(row['KURSUSJAYA']).strip()
+                    if program_offered != 'TIDAK DITAWARKAN':
+                        offered_info = check_offered_program(program_offered, original_choices)
                         if offered_info:
                             if offered_info['type'] == 'success':
                                 st.success(offered_info['message'])
