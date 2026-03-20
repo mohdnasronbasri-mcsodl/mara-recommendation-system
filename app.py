@@ -84,9 +84,9 @@ def generate_explanation(row, program):
             reasons.append(f"Math {row.get('MAT', '')} (≥A-)")
         
         if reasons:
-            return "Layak Asasi: " + ", ".join(reasons[:3])
+            return "Eligible for Foundation: " + ", ".join(reasons[:3])
         else:
-            return "Layak Asasi (syarat minimum dipenuhi)"
+            return "Eligible for Foundation (Minimum requirements met)"
     
     elif group == 6:  # Accounting + SAP
         acc = grade_to_numeric(row.get('ACC', 0))
@@ -100,7 +100,7 @@ def generate_explanation(row, program):
         if bi >= 75:
             reasons.append(f"BI {row.get('BI', '')} (≥B)")
         
-        return "Layak Accounting + SAP: " + ", ".join(reasons[:3]) if reasons else "Layak Accounting + SAP"
+        return "Eligible for Accounting + SAP: " + ", ".join(reasons[:3]) if reasons else "Eligible for Accounting + SAP"
     
     elif group == 2:  # Computer Science + Certification
         math = grade_to_numeric(row.get('MAT', 0))
@@ -111,7 +111,7 @@ def generate_explanation(row, program):
         if bi >= 75:
             reasons.append(f"BI {row.get('BI', '')} (≥B)")
         
-        return "Layak CS + Certification: " + ", ".join(reasons) if reasons else "Layak CS + Certification"
+        return "Eligible for CS + Certification: " + ", ".join(reasons) if reasons else "Eligible for CS + Certification"
     
     elif group == 3:  # Computer Science Basic
         math = grade_to_numeric(row.get('MAT', 0))
@@ -126,21 +126,21 @@ def generate_explanation(row, program):
         if other_count > 0:
             reasons.append(f"{other_count} subjek lain ≥C")
         
-        return "Layak CS Basic: " + ", ".join(reasons) if reasons else "Layak CS Basic"
+        return "Eligible for CS Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
     
     elif group == 4:  # English Communication
         bi = grade_to_numeric(row.get('BI', 0))
         if bi >= 75:
             reasons.append(f"BI {row.get('BI', '')} (≥B)")
         
-        return "Layak English: " + ", ".join(reasons) if reasons else "Layak English Communication"
+        return "Eligible for English: " + ", ".join(reasons) if reasons else "Eligible for English Communication"
     
     elif group == 5:  # Accounting Basic
         math = grade_to_numeric(row.get('MAT', 0))
         if math >= 60:
             reasons.append(f"Math {row.get('MAT', '')} (≥C)")
         
-        return "Layak Accounting Basic: " + ", ".join(reasons) if reasons else "Layak Accounting Basic"
+        return "Eligible for Accounting Basic: " + ", ".join(reasons) if reasons else "Eligible for Accounting Basic"
     
     else:  # Group 1
         bm = grade_to_numeric(row.get('BM', 0))
@@ -155,7 +155,7 @@ def generate_explanation(row, program):
         if other_count >= 2:
             reasons.append(f"{other_count} subjek lain ≥C")
         
-        return "Layak Program Umum: " + ", ".join(reasons) if reasons else "Layak Program Umum"
+        return "Eligible for General Programs: " + ", ".join(reasons) if reasons else "Eligible for General Programs"
 
 # ============================================
 # SENARAI PROGRAM DENGAN GROUP & PRIORITY
@@ -163,7 +163,7 @@ def generate_explanation(row, program):
 ALL_PROGRAMS = [
     # GROUP 7 (PALING TINGGI)
     {
-        'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
+        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia',
         'cluster': 'Engineering',
         'group': 7,
         'priority': 1,
@@ -175,7 +175,7 @@ ALL_PROGRAMS = [
         }
     },
     {
-        'name': 'Asasi Kejuruteraan & Teknologi (UMPSA)',
+        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah',
         'cluster': 'Engineering',
         'group': 7,
         'priority': 1,
@@ -475,10 +475,11 @@ def check_offered_program(program_ditawar, pilihan_asal):
     # Check dalam pilihan 1-3
     for i, p in enumerate(pilihan_asal, 1):
         if program_ditawar.lower() in p.lower():
-            return f"✅ Program Ditawar: {program_ditawar} (Pilihan PIL{i})"
+            return f"✅ Programs Offered: {program_ditawar} (PIL{i})"
     
     # Kalau takde dalam pilihan 1-3
-    return f"✅ Program Ditawar: {program_ditawar}\n\n📝 Nota: Program ini mungkin merupakan pilihan 4-12 dalam senarai penuh UPUOnline. Dalam sistem MARA, pelajar boleh memilih sehingga 12 program, dan tawaran boleh dibuat untuk mana-mana pilihan yang dipenuhi syarat."
+    return f"✅ Programs Offered: {program_ditawar}\n\n📝 Note: This program may be choices 4-12 in the full UPUOnline list. In the MARA system, 
+    students can choose up to 12 programs, and an offer can be made for any choice that meets the requirements"
 
 # ============================================
 # SIDEBAR PENCARIAN
@@ -571,7 +572,7 @@ if cari_button:
                 - Group Priority: Higher groups get bonus (Asasi +20%, etc)
                 - Bonus: +15% if in student's original choices
                 
-                **Priority Order:**
+                **Priority Order:**<br>
                 1️⃣ Group 7 (Asasi) - Tertinggi  
                 2️⃣ Group 6 (Accounting + SAP)  
                 3️⃣ Group 2 (CS + Certification)  
