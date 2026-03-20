@@ -269,7 +269,7 @@ ALL_PROGRAMS = [
     
     # ========== GROUP 7 (ASASI) ==========
     {
-        'name': 'Asasi Kejuruteraan & Teknologi (UTM)',
+        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia',
         'cluster': 'Engineering',
         'group': 7,
         'priority': 1,  # Priority tinggi
@@ -281,7 +281,7 @@ ALL_PROGRAMS = [
         }
     },
     {
-        'name': 'Asasi Kejuruteraan & Teknologi (UMPSA)',
+        'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah',
         'cluster': 'Engineering',
         'group': 7,
         'priority': 1,
