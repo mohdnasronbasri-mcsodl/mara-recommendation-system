@@ -466,7 +466,7 @@ def hitung_skor(row, program):
     return round(base_score, 1)
 
 # ============================================
-# FUNGSI CHECK PROGRAM DITAWAR (VERSI BETUL)
+# FUNGSI CHECK PROGRAM DITAWAR
 # ============================================
 def check_offered_program(program_ditawar, pilihan_asal):
     # Jika TIDAK DITAWARKAN, return None (tak papar apa-apa)
@@ -532,12 +532,12 @@ if cari_button:
             with col_kiri:
                 st.markdown("### 👤 Student Profile")
                 profil_items = []
-                profil_items.append(f"<tr><td style='text-align:left'>{row['NOKP']}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row['NAMA']}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row.get('LOKASI', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>{row.get('ALIRAN', 'N/A')}</td></tr>")
-                profil_items.append(f"<tr><td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>")
+                profil_items.append(f"\\<td style='text-align:left'>{row['NOKP']} </td>")
+                profil_items.append(f"\\<td style='text-align:left'>{row['NAMA']} </td>")
+                profil_items.append(f"\\<td style='text-align:left'>{'Female' if row.get('JANTINA')=='P' else 'Male'} </td>")
+                profil_items.append(f"\\<td style='text-align:left'>{row.get('LOKASI', 'N/A')} </td>")
+                profil_items.append(f"\\<td style='text-align:left'>{row.get('ALIRAN', 'N/A')} </td>")
+                profil_items.append(f"\\<td style='text-align:left'>RM {row.get('PENDAPATAN', 0):,.0f} </td>")
                 
                 st.markdown(f"""
                 <div style='max-height: 300px; overflow-y: auto; margin-bottom: 20px;'>
@@ -554,7 +554,7 @@ if cari_button:
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_items.append(f"<tr><td>{name}</td><td style='text-align:center'><b>{grade}</b></td></tr>")
+                            subject_items.append(f"\\<td>{name}</td>\\<td style='text-align:center'><b>{grade}</b></td>")
                 
                 if subject_items:
                     items_to_show = ''.join(subject_items[:20])
@@ -622,8 +622,8 @@ if cari_button:
                             'explanation': explanation
                         })
                 
-                # Sort ikut priority group dulu, then score
-                program_scores.sort(key=lambda x: (x['priority'], -x['score']))
+                # Sort ikut score (tertinggi dulu), then priority group
+                program_scores.sort(key=lambda x: (-x['score'], x['priority']))
                 top5 = program_scores[:5]
                 
                 st.caption(f"📊 Eligible Programs: {len(program_scores)} out of {len(ALL_PROGRAMS)}")
@@ -644,8 +644,16 @@ if cari_button:
                         # Tentukan icon group
                         if prog['group'] == 7:
                             group_icon = "🏆"
-                        elif prog['group'] <= 3:
+                        elif prog['group'] == 6:
+                            group_icon = "💰"
+                        elif prog['group'] == 2:
                             group_icon = "✨"
+                        elif prog['group'] == 3:
+                            group_icon = "💻"
+                        elif prog['group'] == 4:
+                            group_icon = "🗣️"
+                        elif prog['group'] == 5:
+                            group_icon = "📊"
                         else:
                             group_icon = "📌"
                         
@@ -654,7 +662,7 @@ if cari_button:
                             <span style='font-size: 1.1em'><b>{i}. {prog['name']}{star}</b> {group_icon}</span><br>
                             <span style='font-size: 0.9em; color: {color}'><b>Suitability: {prog['score']}%</b></span><br>
                             <span style='font-size: 0.85em; color: #444;'><i>✓ {prog['explanation']}</i></span><br>
-                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']} | Priority {prog['priority']}</span>
+                            <span style='font-size: 0.8em; color: gray;'>Group {prog['group']}</span>
                         </div>
                         """, unsafe_allow_html=True)
                     
@@ -664,7 +672,7 @@ if cari_button:
                     for i, p in enumerate(pilihan_asal, 1):
                         in_top5 = any(p.lower() in prog['name'].lower() for prog in top5)
                         status = "✅" if in_top5 else "❌"
-                        table_rows.append(f"<tr><td style='text-align:center'>PIL{i}</td><td>{p}</td><td style='text-align:center'>{status}</td></tr>")
+                        table_rows.append(f"\\<td style='text-align:center'>PIL{i}</td>\\<td>{p}</td>\\<td style='text-align:center'>{status}</td>")
                     
                     st.markdown(f"""
                     <div style='max-height: 200px; overflow-y: auto; margin-bottom: 20px;'>
@@ -685,3 +693,98 @@ if cari_button:
                                 st.success(offered_info['message'])
                             else:
                                 st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
+                    
+                    # ========================================
+                    # NOT RECOMMENDED / NOT ELIGIBLE PROGRAMS
+                    # ========================================
+                    st.markdown("### ❌ Not Recommended Programs")
+                    st.markdown("Programs where the student does not meet the minimum requirements:")
+                    
+                    # Kumpul program yang TIDAK layak
+                    not_eligible_programs = []
+                    for prog in ALL_PROGRAMS:
+                        # Check sama ada program ni dalam top5
+                        in_top5 = any(prog['name'] == p['name'] for p in top5)
+                        if not in_top5:
+                            # Check kelayakan
+                            eligible, _ = is_eligible(row, prog, debug=False)
+                            if not eligible:
+                                # Dapatkan sebab kenapa tak layak
+                                reasons = []
+                                syarat = prog.get('syarat', {})
+                                
+                                sejarah = grade_to_numeric(row.get('SEJ', 0))
+                                if sejarah < syarat.get('SEJ', 0):
+                                    reasons.append(f"Sejarah: {row.get('SEJ', 'N/A')} (need ≥ {syarat.get('SEJ', 0)})")
+                                
+                                bm = grade_to_numeric(row.get('BM', 0))
+                                if bm < syarat.get('BM', 0):
+                                    reasons.append(f"BM: {row.get('BM', 'N/A')} (need ≥ {syarat.get('BM', 0)})")
+                                
+                                math = grade_to_numeric(row.get('MAT', 0))
+                                if math < syarat.get('MAT', 0):
+                                    reasons.append(f"Math: {row.get('MAT', 'N/A')} (need ≥ {syarat.get('MAT', 0)})")
+                                
+                                if 'BI' in syarat:
+                                    bi = grade_to_numeric(row.get('BI', 0))
+                                    if bi < syarat['BI']:
+                                        reasons.append(f"BI: {row.get('BI', 'N/A')} (need ≥ {syarat['BI']})")
+                                
+                                if 'M-T' in syarat:
+                                    mt = grade_to_numeric(row.get('M-T', 0))
+                                    if mt < syarat['M-T']:
+                                        reasons.append(f"Add Math: {row.get('M-T', 'N/A')} (need ≥ {syarat['M-T']})")
+                                
+                                if 'sains_min' in syarat:
+                                    fizik = grade_to_numeric(row.get('FIZ', 0))
+                                    kim = grade_to_numeric(row.get('KIM', 0))
+                                    sains_best = max(fizik, kim)
+                                    if sains_best < syarat['sains_min']:
+                                        reasons.append(f"Physics/Chemistry: best = {sains_best} (need ≥ {syarat['sains_min']})")
+                                
+                                if 'other_count' in syarat:
+                                    wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
+                                    other_subjects = [col for col in row.index if col not in wajib and col in SUBJECT_NAMES]
+                                    other_pass = 0
+                                    for subj in other_subjects:
+                                        if grade_to_numeric(row[subj]) >= syarat['other_min']:
+                                            other_pass += 1
+                                    if other_pass < syarat['other_count']:
+                                        reasons.append(f"Only {other_pass}/{syarat['other_count']} other subjects ≥ {syarat['other_min']}")
+                                
+                                not_eligible_programs.append({
+                                    'name': prog['name'],
+                                    'group': prog['group'],
+                                    'reasons': reasons[:2]  # Max 2 reasons
+                                })
+                    
+                    if not_eligible_programs:
+                        # Hadkan kepada 5 program sahaja (kalau terlalu banyak)
+                        not_eligible_programs = not_eligible_programs[:5]
+                        
+                        for prog in not_eligible_programs:
+                            group_color = "#6c757d"  # gray
+                            if prog['group'] == 7:
+                                group_icon = "🏛️"
+                            elif prog['group'] == 6:
+                                group_icon = "💰"
+                            elif prog['group'] == 2:
+                                group_icon = "💻"
+                            elif prog['group'] == 3:
+                                group_icon = "🖥️"
+                            elif prog['group'] == 4:
+                                group_icon = "🗣️"
+                            elif prog['group'] == 5:
+                                group_icon = "📊"
+                            else:
+                                group_icon = "📚"
+                            
+                            st.markdown(f"""
+                            <div style='margin-bottom: 10px; padding: 8px; border-left: 5px solid {group_color}; border-radius: 3px; background-color: #f2f2f2;'>
+                                <span style='font-size: 0.95em;'><b>{prog['name']}</b> {group_icon}</span><br>
+                                <span style='font-size: 0.8em; color: #dc3545;'><b>❌ Not eligible:</b> {', '.join(prog['reasons'])}</span><br>
+                                <span style='font-size: 0.75em; color: gray;'>Group {prog['group']}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                    else:
+                        st.info("✅ All programs are eligible for this student.")
