@@ -289,7 +289,7 @@ def is_eligible(row, program):
     return False, "Program requirements not defined"
 
 # ============================================
-# CALCULATE SCORE (BASIC)
+# CALCULATE SCORE (BASIC) - NOT USED FOR SORTING
 # ============================================
 def calculate_score(row, program):
     score = 0
@@ -357,6 +357,7 @@ def calculate_score(row, program):
 def calculate_detailed_score(row, program):
     """
     Calculate suitability score with detailed breakdown for XAI.
+    Returns academic_score, demographic_score, preference_bonus, total_score
     """
     
     group = program.get('group', 1)
@@ -492,10 +493,10 @@ def calculate_detailed_score(row, program):
     total_score = min(total_score, 100)
     
     return {
-        'total_score': round(total_score, 1),
         'academic_score': round(academic_score, 1),
         'demographic_score': round(demographic_score, 1),
         'preference_bonus': preference_bonus,
+        'total_score': round(total_score, 1),
         'breakdown': {
             'academic': {
                 'subjects': academic_breakdown,
@@ -706,12 +707,12 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
-                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Name</b></td><td>{row['NAMA']}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td>
+                    <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td>
+                    <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td>
+                    <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td>
+                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td>
+                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td>
                 </table>
                 </div>
                 """, unsafe_allow_html=True)
@@ -752,27 +753,27 @@ if search_button:
                     st.markdown("""
                     ### Suitability Score Formula
                     
-                    **Total = (Academic × 80%) + (Demographic × 10%) + Preference Bonus**
+                    **Total Suitability = (Academic × 80%) + (Demographic × 10%) + Preference Bonus**
                     
                     ---
-                    **1. Academic Score (80%)**
+                    **1. Academic Score (Eligibility Level)**
                     - Based on SPM grades in relevant subjects
                     - Different subjects have different weights per program
                     - Maximum: 100%
                     
-                    **2. Demographic Score (10%)**
+                    **2. Demographic Score**
                     - Location: Rural (50) / Urban (30)
                     - Income: B40 (50), M40 lower (40), M40 upper (30), T20 (20)
                     - Maximum: 100%
                     
-                    **3. Preference Bonus (10%)**
+                    **3. Preference Bonus**
                     - Matches 1st choice: +15
                     - Matches 2nd choice: +12
                     - Matches 3rd choice: +10
                     - No match: 0
                     
                     ---
-                    **Eligibility Levels:**
+                    **Suitability Levels:**
                     - 🟢 **≥80%**: Highly Suitable
                     - 🟡 **60-79%**: Moderately Suitable
                     - 🔴 **<60%**: Less Suitable
@@ -790,21 +791,50 @@ if search_button:
                 # ========================================
                 st.markdown("### 📋 Student's Original Choices")
                 
-                # Evaluate ALL programs first to check which ones are in recommendations
-                all_programs_for_check = []
+                # Evaluate ALL programs to build recommendation list with detailed scores
+                all_programs_with_scores = []
+                
                 for prog in ALL_PROGRAMS:
-                    eligible, _ = is_eligible(row, prog)
-                    score = calculate_score(row, prog) if eligible else 0
-                    all_programs_for_check.append({
-                        'name': prog['name'],
-                        'eligible': eligible,
-                        'score': score
-                    })
+                    eligible, reason = is_eligible(row, prog)
+                    if eligible:
+                        detailed = calculate_detailed_score(row, prog)
+                        in_original = any(prog['name'].lower() in p.lower() for p in original_choices)
+                        
+                        all_programs_with_scores.append({
+                            'name': prog['name'],
+                            'group': prog['group'],
+                            'eligible': True,
+                            'in_original': in_original,
+                            'academic_score': detailed['academic_score'],
+                            'demographic_score': detailed['demographic_score'],
+                            'preference_bonus': detailed['preference_bonus'],
+                            'total_score': detailed['total_score'],
+                            'detailed': detailed,
+                            'explanation': generate_explanation(row, prog),
+                            'reason': ""
+                        })
+                    else:
+                        all_programs_with_scores.append({
+                            'name': prog['name'],
+                            'group': prog['group'],
+                            'eligible': False,
+                            'in_original': False,
+                            'academic_score': 0,
+                            'demographic_score': 0,
+                            'preference_bonus': 0,
+                            'total_score': 0,
+                            'detailed': None,
+                            'explanation': "",
+                            'reason': reason
+                        })
                 
-                # Sort to get top recommendations
-                all_programs_for_check.sort(key=lambda x: -x['score'])
-                top_recommendations = [p['name'] for p in all_programs_for_check[:10]]
+                # SORT by Total Suitability Score (highest to lowest)
+                all_programs_with_scores.sort(key=lambda x: -x['total_score'])
                 
+                # Get top recommendations for original choices check
+                top_recommendations = [p['name'] for p in all_programs_with_scores[:10] if p['eligible']]
+                
+                # Display original choices table
                 choice_rows = []
                 for i, p in enumerate(original_choices, 1):
                     in_list = any(p.lower() in rec.lower() for rec in top_recommendations)
@@ -818,68 +848,54 @@ if search_button:
                     st.info("No original choices recorded")
                 
                 # ========================================
-                # PROGRAM RECOMMENDATIONS WITH NEW DISPLAY FORMAT
+                # PROGRAM RECOMMENDATIONS
                 # ========================================
                 st.markdown("### 🎯 Program Recommendations")
                 st.caption("Click on any program to see detailed score breakdown")
                 
-                # Evaluate ALL programs
-                all_programs = []
+                eligible_count = len([p for p in all_programs_with_scores if p['eligible']])
+                st.caption(f"📊 Showing {eligible_count} eligible programs out of {len(all_programs_with_scores)} total")
                 
-                for prog in ALL_PROGRAMS:
-                    eligible, reason = is_eligible(row, prog)
-                    score = calculate_score(row, prog) if eligible else 0
-                    in_original = any(prog['name'].lower() in p.lower() for p in original_choices)
-                    if in_original and eligible:
-                        score = min(score + 15, 100)
-                    
-                    all_programs.append({
-                        'name': prog['name'],
-                        'group': prog['group'],
-                        'score': score,
-                        'eligible': eligible,
-                        'in_original': in_original,
-                        'explanation': generate_explanation(row, prog) if eligible else "",
-                        'reason': reason if not eligible else ""
-                    })
-                
-                # Sort by score (highest first) - Kekal
-                all_programs.sort(key=lambda x: -x['score'])
-                
-                st.caption(f"📊 Showing {len([p for p in all_programs if p['eligible']])} eligible programs out of {len(all_programs)} total")
-                
-                # ============================================
-                # NEW DISPLAY FORMAT - Yang Diubah
-                # ============================================
-                for i, prog in enumerate(all_programs, 1):
+                # Display recommendations with expanders
+                for i, prog in enumerate(all_programs_with_scores, 1):
                     if prog['eligible']:
-                        # Determine suitability level and emoji
-                        if prog['score'] >= 80:
-                            level_emoji = "🟢"
-                            level_text = "Highly Suitable"
-                        elif prog['score'] >= 60:
-                            level_emoji = "🟡"
-                            level_text = "Moderately Suitable"
-                        else:
-                            level_emoji = "🔴"
-                            level_text = "Less Suitable"
-                        
                         star = "⭐ " if prog['in_original'] else ""
                         
-                        # Create expander with new format
-                        with st.expander(f"{i}. {star}{prog['name']}"):
-                            # Display status and score
+                        # Create expander with custom HTML header
+                        with st.expander(""):
+                            # Custom header with name left, scores right
                             st.markdown(f"""
-                            <div style='margin-bottom: 10px;'>
-                                <span style='font-size: 1.1em; font-weight: bold;'>{level_emoji} {level_text}</span><br>
-                                <span style='font-size: 1em; color: #1e88e5;'>🎯 Total Suitability Score: {prog['score']}%</span>
+                            <div style='display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px;'>
+                                <span style='font-weight: bold; font-size: 1em;'>{i}. {star}{prog['name']}</span>
+                                <div style='text-align: right;'>
+                                    <span style='color: #1e88e5; font-weight: bold;'>🎯 {prog['total_score']}%</span><br>
+                                    <span style='font-size: 0.75em; color: #666;'>📊 Eligibility: {prog['academic_score']}%</span>
+                                </div>
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # Get detailed score breakdown for XAI
-                            detailed = calculate_detailed_score(row, prog)
+                            # Determine suitability level based on TOTAL score
+                            if prog['total_score'] >= 80:
+                                level_emoji = "🟢"
+                                level_text = "Highly Suitable"
+                            elif prog['total_score'] >= 60:
+                                level_emoji = "🟡"
+                                level_text = "Moderately Suitable"
+                            else:
+                                level_emoji = "🔴"
+                                level_text = "Less Suitable"
                             
-                            # Main score display with formula
+                            # Display status
+                            st.markdown(f"""
+                            <div style='margin-bottom: 15px;'>
+                                <span style='font-size: 1.1em; font-weight: bold;'>{level_emoji} {level_text}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Get detailed breakdown
+                            detailed = prog['detailed']
+                            
+                            # Formula explanation
                             st.markdown(f"""
                             <div style='margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;'>
                                 <p style='margin: 5px 0 0 0; font-size: 0.85em;'><b>Formula:</b> {detailed['weight_formula']}</p>
@@ -895,7 +911,7 @@ if search_button:
                                 st.markdown(f"""
                                 <div style='background-color: #e8f4fd; padding: 10px; border-radius: 8px; height: 100%;'>
                                     <h4 style='margin: 0 0 8px 0;'>📚 Academic</h4>
-                                    <p style='font-size: 1.5em; font-weight: bold; margin: 0; color: #1e88e5;'>{detailed['academic_score']}%</p>
+                                    <p style='font-size: 1.5em; font-weight: bold; margin: 0; color: #1e88e5;'>{prog['academic_score']}%</p>
                                     <p style='font-size: 0.7em; color: #666; margin-bottom: 8px;'>Weight: 80%</p>
                                     <hr style='margin: 8px 0;'>
                                 """, unsafe_allow_html=True)
@@ -921,7 +937,7 @@ if search_button:
                                 st.markdown(f"""
                                 <div style='background-color: #fef4e8; padding: 10px; border-radius: 8px; height: 100%;'>
                                     <h4 style='margin: 0 0 8px 0;'>🏠 Demographic</h4>
-                                    <p style='font-size: 1.5em; font-weight: bold; margin: 0; color: #fb8c00;'>{detailed['demographic_score']}%</p>
+                                    <p style='font-size: 1.5em; font-weight: bold; margin: 0; color: #fb8c00;'>{prog['demographic_score']}%</p>
                                     <p style='font-size: 0.7em; color: #666; margin-bottom: 8px;'>Weight: 10%</p>
                                     <hr style='margin: 8px 0;'>
                                 """, unsafe_allow_html=True)
@@ -946,7 +962,7 @@ if search_button:
                             
                             # Column 3: Preference Alignment (10%)
                             with col_c:
-                                pref_bonus = detailed['preference_bonus']
+                                pref_bonus = prog['preference_bonus']
                                 if pref_bonus > 0:
                                     bg_color = "#e8f5e9"
                                     border_color = "#4caf50"
@@ -980,9 +996,9 @@ if search_button:
                             st.markdown("### 📊 Score Composition")
                             
                             # Calculate contributions
-                            academic_contrib = detailed['academic_score'] * 0.8
-                            demo_contrib = detailed['demographic_score'] * 0.1
-                            pref_contrib = detailed['preference_bonus']
+                            academic_contrib = prog['academic_score'] * 0.8
+                            demo_contrib = prog['demographic_score'] * 0.1
+                            pref_contrib = prog['preference_bonus']
                             
                             # Simple bar using HTML/CSS
                             st.markdown(f"""
@@ -995,13 +1011,13 @@ if search_button:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            st.caption(f"Total: {detailed['total_score']}% = Academic ({detailed['academic_score']}% × 0.8) + Demographic ({detailed['demographic_score']}% × 0.1) + Preference Bonus ({pref_bonus})")
+                            st.caption(f"Total: {prog['total_score']}% = Academic ({prog['academic_score']}% × 0.8) + Demographic ({prog['demographic_score']}% × 0.1) + Preference Bonus ({pref_bonus})")
                             
                             # Brief explanation
-                            st.info(f"💡 **Why this score?** {generate_explanation(row, prog)}")
+                            st.info(f"💡 **Why this score?** {prog['explanation']}")
                     
                     else:
-                        # Not eligible - keep original display
+                        # Not eligible
                         st.markdown(f"""
                         <div style='margin-bottom: 8px; padding: 8px; border-left: 5px solid #dc3545; border-radius: 5px; background-color: #ffffff; border: 1px solid #e0e0e0;'>
                             <span style='font-size: 0.9em; color: #000000;'><b>{i}. {prog['name']}</b></span><br>
