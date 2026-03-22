@@ -671,7 +671,7 @@ if search_button:
                         """, unsafe_allow_html=True)
 
                         # Expander for detailed content
-                        with st.expander(f"📋 View Details", expanded=False):
+                        
                             # Determine suitability level text
                             if prog['total_score'] >= 80:
                                 level_text = "🟢 Highly Suitable"
