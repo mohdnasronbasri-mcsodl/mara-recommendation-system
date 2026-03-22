@@ -562,13 +562,13 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%;'>
-                    <tr><td><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
-                    <tr><td><b>Name</b></td><td>{row['NAMA']}</td></tr>
-                    <tr><td><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                </table>
+                     <tr><td><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
+                     <tr><td><b>Name</b></td><td>{row['NAMA']}</td></tr>
+                     <tr><td><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                     <tr><td><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
+                     <tr><td><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
+                     <tr><td><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                 </table>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -704,8 +704,11 @@ if search_button:
                             st.markdown(f"📊 Eligibility: {prog['academic_score']}%")
 
                         with col4:
-                            if st.button("▶ View Details", key=f"btn_{prog_key}"):
+                            # Toggle button for details
+                            button_label = "▼ Hide Details" if st.session_state.expanded_prog.get(prog_key, False) else "▶ View Details"
+                            if st.button(button_label, key=f"btn_{prog_key}"):
                                 st.session_state.expanded_prog[prog_key] = not st.session_state.expanded_prog.get(prog_key, False)
+                                st.rerun()
 
                         st.markdown("---")
 
