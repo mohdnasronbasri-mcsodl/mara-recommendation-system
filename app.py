@@ -688,22 +688,22 @@ if search_button:
 
                         prog_key = f"prog_{i}"
 
-                        # Header with all information in one row
-                        col1, col2, col3, col4, col5 = st.columns([3, 1.2, 1, 1, 0.8])
+                        # Baris 1: Program name
+                        st.markdown(f"**{i}. {star}{prog['name']}**")
+
+                        # Baris 2: Level, Total, Eligibility, and View Details button in one row
+                        col1, col2, col3, col4 = st.columns([1.2, 1, 1, 1])
 
                         with col1:
-                            st.markdown(f"**{i}. {star}{prog['name']}**")
-
-                        with col2:
                             st.markdown(f"{level_emoji} {level_text}")
 
-                        with col3:
+                        with col2:
                             st.markdown(f"🎯 Total: {prog['total_score']}%")
 
-                        with col4:
+                        with col3:
                             st.markdown(f"📊 Eligibility: {prog['academic_score']}%")
 
-                        with col5:
+                        with col4:
                             if st.button("▶ View Details", key=f"btn_{prog_key}"):
                                 st.session_state.expanded_prog[prog_key] = not st.session_state.expanded_prog.get(prog_key, False)
 
@@ -731,7 +731,7 @@ if search_button:
                                 demo_contrib = prog['demographic_score'] * 0.1
                                 pref_contrib = prog['preference_bonus']
 
-                                # Formula explanation (ONLY ONCE)
+                                # Formula explanation
                                 st.markdown(f"""
                                 <div style='margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;'>
                                     <p><b>Formula:</b> {detailed['weight_formula']}</p>
@@ -866,7 +866,7 @@ if search_button:
                                 st.markdown("</div>", unsafe_allow_html=True)
 
                                 # ============================================
-                                # SCORE COMPOSITION (Progress Bar)
+                                # SCORE COMPOSITION
                                 # ============================================
                                 st.markdown("---")
                                 st.markdown("### 📊 Score Composition")
