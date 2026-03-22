@@ -540,13 +540,13 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%;'>
-                     <tr><td style='padding: 6px;'><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
-                     <tr><td style='padding: 6px;'><b>Name</b></td><td>{row['NAMA']}</td></tr>
-                     <tr><td style='padding: 6px;'><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                     <tr><td style='padding: 6px;'><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
-                     <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
-                     <tr><td style='padding: 6px;'><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                 </table>
+                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                </table>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -752,7 +752,7 @@ if search_button:
                             """, unsafe_allow_html=True)
 
                             # ============================================
-                            # 3. PREFERENCE CARD
+                            # 3. PREFERENCE CARD (with smaller font for original choices)
                             # ============================================
                             pref_bonus = prog['preference_bonus']
                             if pref_bonus > 0:
@@ -775,13 +775,14 @@ if search_button:
                                 <div style='font-size: 0.75em;'>{match_text}</div>
                             """, unsafe_allow_html=True)
                             
-                           original_choices_list = detailed.get('original_choices', [])
-if original_choices_list:
-    st.markdown("**Your original choices:**")
-    for j, choice in enumerate(original_choices_list, 1):
-        st.markdown(f"&nbsp;&nbsp;{j}. {choice[:60]}...")
-
-st.markdown("</div>", unsafe_allow_html=True)
+                            # Original choices with smaller font
+                            original_choices_list = detailed.get('original_choices', [])
+                            if original_choices_list:
+                                st.markdown("<span style='font-size: 0.75em; font-weight: bold;'>Your original choices:</span>", unsafe_allow_html=True)
+                                for j, choice in enumerate(original_choices_list, 1):
+                                    st.markdown(f"<span style='font-size: 0.7em;'>&nbsp;&nbsp;{j}. {choice[:60]}...</span>", unsafe_allow_html=True)
+                            
+                            st.markdown("</div>", unsafe_allow_html=True)
 
                             # ============================================
                             # SCORE COMPOSITION
@@ -796,14 +797,14 @@ st.markdown("</div>", unsafe_allow_html=True)
                             st.markdown(f"""
                             <div style='margin: 8px 0;'>
                                 <div style='display: flex; height: 28px; border-radius: 5px; overflow: hidden;'>
-                                    <div style='background-color: #1e88e5; width: 33%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Academic {academic_contrib:.1f}%</div>
-                                    <div style='background-color: #fb8c00; width: 34%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Demo {demo_contrib:.1f}%</div>
-                                    <div style='background-color: #4caf50; width: 33%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Pref {pref_contrib:.1f}%</div>
+                                    <div style='background-color: #1e88e5; width: {academic_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Academic {academic_contrib:.1f}%</div>
+                                    <div style='background-color: #fb8c00; width: {demo_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Demo {demo_contrib:.1f}%</div>
+                                    <div style='background-color: #4caf50; width: {pref_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Pref {pref_contrib:.1f}%</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            st.caption(f"Total: {prog['total_score']}% = Academic ({prog['academic_score']}% × 0.8) + Demographic ({prog['demographic_score']}% × 0.1) + Preference Bonus ({pref_bonus})")
+                            st.caption(f"Total: {prog['total_score']}% = Academic ({prog['academic_score']}% × 0.8) + Demographic ({prog['demographic_score']}% × 0.1) + Preference Bonus ({pref_contrib})")
                             
                             # Brief explanation
                             st.info(f"💡 {prog['explanation']}")
