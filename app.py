@@ -569,7 +569,9 @@ if search_button:
                     **Total Suitability = (Academic × 80%) + (Demographic × 10%) + Preference Bonus**
 
                     **Academic Score (Eligibility Level):** Based on SPM grades in relevant subjects
+                    
                     **Demographic Score:** Location (Rural 50/Urban 30) + Income (B40 50, M40 40/30, T20 20)
+                    
                     **Preference Bonus:** 1st choice +15, 2nd +12, 3rd +10
 
                     **Suitability Levels:** 🟢 ≥80% Highly Suitable | 🟡 60-79% Moderately Suitable | 🔴 <60% Less Suitable
