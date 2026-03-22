@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
+
+# NO plotly import - removed!
 
 # Page config
 st.set_page_config(
@@ -71,14 +71,11 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
-# XAI: DETAILED SCORE BREAKDOWN (NEW!)
+# XAI: DETAILED SCORE BREAKDOWN
 # ============================================
 def calculate_detailed_score(row, program):
     """
     Calculate suitability score with detailed breakdown for XAI.
-    
-    Returns:
-        dict: Complete breakdown of how score is calculated
     """
     
     group = program.get('group', 1)
@@ -116,26 +113,13 @@ def calculate_detailed_score(row, program):
                 academic_total += subject_score
                 academic_weight += weight
                 
-                # Determine performance level
-                if grade_value >= 85:
-                    level = "Excellent"
-                elif grade_value >= 75:
-                    level = "Good"
-                elif grade_value >= 60:
-                    level = "Satisfactory"
-                elif grade_value >= 40:
-                    level = "Pass"
-                else:
-                    level = "Needs Improvement"
-                
                 academic_breakdown.append({
                     'subject': SUBJECT_NAMES.get(subj, subj),
                     'code': subj,
                     'grade': row.get(subj, 'N/A'),
                     'grade_value': grade_value,
                     'weight': weight,
-                    'contribution': round(subject_score, 1),
-                    'level': level
+                    'contribution': round(subject_score, 1)
                 })
     
     # Calculate academic score (max 100)
@@ -242,11 +226,7 @@ def calculate_detailed_score(row, program):
     # 4. CALCULATE TOTAL SCORE
     # ============================================
     
-    # Apply weights: Academic 80%, Demographic 10%, Preference 10% (max 15)
-    # Note: Preference component is added directly (not percentage)
     total_score = (academic_score * 0.8) + (demographic_score * 0.1) + preference_bonus
-    
-    # Cap at 100
     total_score = min(total_score, 100)
     
     # ============================================
@@ -590,17 +570,7 @@ if search_button:
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            # Add color coding based on grade
-                            numeric = grade_to_numeric(grade)
-                            if numeric >= 85:
-                                grade_display = f"🟢 {grade}"
-                            elif numeric >= 75:
-                                grade_display = f"🔵 {grade}"
-                            elif numeric >= 60:
-                                grade_display = f"🟡 {grade}"
-                            else:
-                                grade_display = f"🔴 {grade}"
-                            subject_data.append({"Subject": name, "Grade": grade_display})
+                            subject_data.append({"Subject": name, "Grade": grade})
                 
                 if subject_data:
                     df_subjects = pd.DataFrame(subject_data)
@@ -830,39 +800,26 @@ if search_button:
                             st.markdown("---")
                             st.markdown("### 📊 Score Composition")
                             
-                            # Create horizontal bar representation
+                            # Calculate contributions
                             academic_contrib = detailed['academic_score'] * 0.8
                             demo_contrib = detailed['demographic_score'] * 0.1
                             pref_contrib = detailed['preference_bonus']
                             
-                            # Use columns for composition display
-                            comp_col1, comp_col2, comp_col3 = st.columns([academic_contrib, demo_contrib, pref_contrib])
-                            
-                            with comp_col1:
-                                st.markdown(f"""
-                                <div style='background-color: #1e88e5; padding: 8px; border-radius: 5px; text-align: center; color: white; font-weight: bold;'>
-                                    Academic<br>{academic_contrib:.1f}%
+                            # Simple bar using st.progress
+                            st.markdown(f"""
+                            <div style='margin: 10px 0;'>
+                                <div style='display: flex; height: 30px; border-radius: 5px; overflow: hidden;'>
+                                    <div style='background-color: #1e88e5; width: {academic_contrib}%; text-align: center; color: white; font-weight: bold; font-size: 0.75em;'>Academic {academic_contrib:.1f}%</div>
+                                    <div style='background-color: #fb8c00; width: {demo_contrib}%; text-align: center; color: white; font-weight: bold; font-size: 0.75em;'>Demo {demo_contrib:.1f}%</div>
+                                    <div style='background-color: #4caf50; width: {pref_contrib}%; text-align: center; color: white; font-weight: bold; font-size: 0.75em;'>Pref {pref_contrib:.1f}%</div>
                                 </div>
-                                """, unsafe_allow_html=True)
-                            
-                            with comp_col2:
-                                st.markdown(f"""
-                                <div style='background-color: #fb8c00; padding: 8px; border-radius: 5px; text-align: center; color: white; font-weight: bold;'>
-                                    Demo<br>{demo_contrib:.1f}%
-                                </div>
-                                """, unsafe_allow_html=True)
-                            
-                            with comp_col3:
-                                st.markdown(f"""
-                                <div style='background-color: #4caf50; padding: 8px; border-radius: 5px; text-align: center; color: white; font-weight: bold;'>
-                                    Pref<br>{pref_contrib:.1f}%
-                                </div>
-                                """, unsafe_allow_html=True)
+                            </div>
+                            """, unsafe_allow_html=True)
                             
                             st.caption(f"Total: {detailed['total_score']}% = Academic ({detailed['academic_score']}% × 0.8) + Demographic ({detailed['demographic_score']}% × 0.1) + Preference Bonus ({pref_bonus})")
                             
                             # Brief explanation
-                            st.info("💡 **Why this score?** " + generate_explanation(row, prog))
+                            st.info(f"💡 **Why this score?** {generate_explanation(row, prog)}")
                     
                     else:
                         # Not eligible - keep original display
