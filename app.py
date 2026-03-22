@@ -21,7 +21,6 @@ def load_model_and_data():
     return model, df
 
 model, df = load_model_and_data()
-feature_names = list(model.feature_names_in_)
 
 # ============================================
 # SPM SUBJECT DICTIONARY
@@ -388,6 +387,7 @@ def calculate_detailed_score(row, program):
         'demographic_score': round(demographic_score, 1),
         'preference_bonus': preference_bonus,
         'total_score': round(total_score, 1),
+        'original_choices': original_choices,
         'breakdown': {
             'academic': {
                 'subjects': academic_breakdown,
@@ -488,21 +488,13 @@ ALL_PROGRAMS = [
 # ============================================
 def check_offered_program(program_ditawar, original_choices):
     if program_ditawar == 'TIDAK DITAWARKAN' or pd.isna(program_ditawar):
-        return {
-            'type': 'info',
-            'message': "❌ Student was not offered any program.",
-            'note': "This may be due to quota limitations or the student not meeting the required criteria."
-        }
+        return "❌ Student was not offered any program."
 
     for i, p in enumerate(original_choices, 1):
         if program_ditawar.lower() in p.lower():
-            return {'type': 'success', 'message': f"✅ Program Offered: {program_ditawar} (Choice {i})"}
+            return f"✅ Program Offered: {program_ditawar} (Choice {i})"
 
-    return {
-        'type': 'info',
-        'message': f"✅ Program Offered: {program_ditawar}",
-        'note': "📝 Note: This program may be among choices 4-12 in the full UPUOnline list."
-    }
+    return f"✅ Program Offered: {program_ditawar}"
 
 # ============================================
 # SIDEBAR
@@ -548,20 +540,17 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%;'>
-                    <tr><td><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
-                    <tr><td><b>Name</b></td><td>{row['NAMA']}</td></tr>
-                    <tr><td><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                </table>
+                     <tr><td style='padding: 6px;'><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Name</b></td><td>{row['NAMA']}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                 </table>
                 </div>
                 """, unsafe_allow_html=True)
 
-                if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
-                    if str(row['KURSUSJAYA']).strip() == 'TIDAK DITAWARKAN':
-                        st.info("❌ **Student was not offered any program.**")
-
+                # SPM Subjects
                 st.markdown("### 📚 SPM Subjects")
                 subject_data = []
                 for code, name in SUBJECT_NAMES.items():
@@ -683,84 +672,148 @@ if search_button:
                             st.markdown(f"**{level_text}**")
 
                             detailed = prog['detailed']
+                            
+                            # Calculate contribution scores
+                            academic_contrib = prog['academic_score'] * 0.8
+                            demo_contrib = prog['demographic_score'] * 0.1
+                            pref_contrib = prog['preference_bonus']
 
+                            # Formula explanation
                             st.markdown(f"""
-                            <div style='margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;'>
-                                <p style='margin: 5px 0 0 0; font-size: 0.85em;'><b>Formula:</b> {detailed['weight_formula']}</p>
+                            <div style='margin-bottom: 12px; padding: 8px; background-color: #f8f9fa; border-radius: 6px;'>
+                                <p style='margin: 0; font-size: 0.85em;'><b>Formula:</b> {detailed['weight_formula']}</p>
                                 <p style='margin: 2px 0 0 0; font-size: 0.75em; color: #666;'>{detailed['formula_explanation']}</p>
                             </div>
                             """, unsafe_allow_html=True)
 
-                            col_a, col_b, col_c = st.columns(3)
+                            # ============================================
+                            # 1. ACADEMIC CARD
+                            # ============================================
+                            st.markdown(f"""
+                            <div style='background-color: #e8f4fd; padding: 12px; border-radius: 8px; margin-bottom: 10px;'>
+                                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
+                                    <span style='font-weight: bold; font-size: 1.1em;'>📚 Academic</span>
+                                    <span style='font-size: 1.3em; font-weight: bold; color: #1e88e5;'>{prog['academic_score']}%</span>
+                                </div>
+                                <div style='font-size: 0.75em; color: #666; margin-bottom: 8px;'>Weight: 80%</div>
+                                <hr style='margin: 6px 0;'>
+                            """, unsafe_allow_html=True)
+                            
+                            # Subject breakdown with smaller font
+                            for subj in detailed['breakdown']['academic']['subjects']:
+                                if subj['grade_value'] > 0:
+                                    st.markdown(f"""
+                                    <div style='display: flex; justify-content: space-between; font-size: 0.75em; margin-bottom: 3px;'>
+                                        <span><b>{subj['subject']}</b> ({subj['grade']})</span>
+                                        <span><b>{subj['contribution']:.1f}</b> (×{subj['weight']})</span>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                            
+                            st.markdown(f"""
+                                <hr style='margin: 6px 0;'>
+                                <div style='font-size: 0.7em; color: #666;'>{detailed['breakdown']['academic']['calculation']}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
-                            with col_a:
-                                st.markdown(f"""
-                                <div style='background-color: #e8f4fd; padding: 10px; border-radius: 8px;'>
-                                    <h4>📚 Academic</h4>
-                                    <p style='font-size: 1.5em; font-weight: bold; color: #1e88e5;'>{prog['academic_score']}%</p>
-                                    <p>Weight: 80%</p>
-                                    <hr>
-                                """, unsafe_allow_html=True)
-                                for subj in detailed['breakdown']['academic']['subjects']:
-                                    if subj['grade_value'] > 0:
-                                        st.markdown(f"- {subj['subject']} ({subj['grade']}): {subj['contribution']:.1f}")
-                                st.markdown(f"<small>{detailed['breakdown']['academic']['calculation']}</small>", unsafe_allow_html=True)
-                                st.markdown("</div>", unsafe_allow_html=True)
+                            # ============================================
+                            # 2. DEMOGRAPHIC CARD
+                            # ============================================
+                            location = row.get('LOKASI', 'URBAN')
+                            if location == 'RURAL':
+                                location_display = "LUAR BANDAR"
+                            else:
+                                location_display = "BANDAR"
 
-                            with col_b:
-                                st.markdown(f"""
-                                <div style='background-color: #fef4e8; padding: 10px; border-radius: 8px;'>
-                                    <h4>🏠 Demographic</h4>
-                                    <p style='font-size: 1.5em; font-weight: bold; color: #fb8c00;'>{prog['demographic_score']}%</p>
-                                    <p>Weight: 10%</p>
-                                    <hr>
-                                """, unsafe_allow_html=True)
-                                location = row.get('LOKASI', 'URBAN')
-                                income_val = row.get('PENDAPATAN', 5000)
-                                st.markdown(f"- Location: {location}")
-                                st.markdown(f"- Income: RM {income_val:,.0f}")
-                                st.markdown("</div>", unsafe_allow_html=True)
+                            income = row.get('PENDAPATAN', 5000)
+                            if income < 3000:
+                                income_category = "B40"
+                            elif income < 5000:
+                                income_category = "M40"
+                            elif income < 8000:
+                                income_category = "M40"
+                            else:
+                                income_category = "T20"
 
-                            with col_c:
-                                pref_bonus = prog['preference_bonus']
-                                st.markdown(f"""
-                                <div style='background-color: #e8f5e9; padding: 10px; border-radius: 8px; border-left: 4px solid #4caf50;'>
-                                    <h4>⭐ Preference</h4>
-                                    <p style='font-size: 1.5em; font-weight: bold; color: #4caf50;'>{pref_bonus} / 15</p>
-                                    <p>Weight: 10% (max 15)</p>
-                                    <hr>
-                                """, unsafe_allow_html=True)
-                                if prog['in_original']:
-                                    st.markdown("✓ Matches your original choice")
-                                else:
-                                    st.markdown("✗ Not in your original choices")
-                                st.markdown("</div>", unsafe_allow_html=True)
+                            st.markdown(f"""
+                            <div style='background-color: #fef4e8; padding: 12px; border-radius: 8px; margin-bottom: 10px;'>
+                                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
+                                    <span style='font-weight: bold; font-size: 1.1em;'>🏠 Demographic</span>
+                                    <span style='font-size: 1.3em; font-weight: bold; color: #fb8c00;'>{prog['demographic_score']}%</span>
+                                </div>
+                                <div style='font-size: 0.75em; color: #666; margin-bottom: 8px;'>Weight: 10%</div>
+                                <hr style='margin: 6px 0;'>
+                                <div style='font-size: 0.75em; margin-bottom: 3px;'>
+                                    <span><b>Location:</b> {location_display}</span>
+                                </div>
+                                <div style='font-size: 0.75em; margin-bottom: 3px;'>
+                                    <span><b>Income:</b> RM {income:,.0f} ({income_category})</span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
 
+                            # ============================================
+                            # 3. PREFERENCE CARD
+                            # ============================================
+                            pref_bonus = prog['preference_bonus']
+                            if pref_bonus > 0:
+                                bg_color = "#e8f5e9"
+                                border_color = "#4caf50"
+                                match_text = "✓ Matches your original choice"
+                            else:
+                                bg_color = "#fff3e0"
+                                border_color = "#ff9800"
+                                match_text = "✗ Not in your original choices"
+
+                            st.markdown(f"""
+                            <div style='background-color: {bg_color}; padding: 12px; border-radius: 8px; border-left: 4px solid {border_color}; margin-bottom: 10px;'>
+                                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'>
+                                    <span style='font-weight: bold; font-size: 1.1em;'>⭐ Preference</span>
+                                    <span style='font-size: 1.3em; font-weight: bold; color: {border_color};'>{pref_bonus} / 15</span>
+                                </div>
+                                <div style='font-size: 0.75em; color: #666; margin-bottom: 8px;'>Weight: 10% (max 15 points)</div>
+                                <hr style='margin: 6px 0;'>
+                                <div style='font-size: 0.75em;'>{match_text}</div>
+                            """, unsafe_allow_html=True)
+                            
+                            original_choices_list = detailed.get('original_choices', [])
+                            if original_choices_list:
+                                st.markdown("**Your original choices:**")
+                                for j, choice in enumerate(original_choices_list, 1):
+                                    st.markdown(f"&nbsp;&nbsp;{j}. {choice[:60]}...")
+                            
+                            st.markdown("</div>", unsafe_allow_html=True)
+
+                            # ============================================
+                            # SCORE COMPOSITION
+                            # ============================================
                             st.markdown("---")
                             st.markdown("### 📊 Score Composition")
-
+                            
                             academic_contrib = prog['academic_score'] * 0.8
                             demo_contrib = prog['demographic_score'] * 0.1
                             pref_contrib = prog['preference_bonus']
 
                             st.markdown(f"""
-                            <div style='margin: 10px 0;'>
-                                <div style='display: flex; height: 30px; border-radius: 5px; overflow: hidden;'>
-                                    <div style='background-color: #1e88e5; width: 33%; text-align: center; color: white;'>Academic {academic_contrib:.1f}%</div>
-                                    <div style='background-color: #fb8c00; width: 34%; text-align: center; color: white;'>Demo {demo_contrib:.1f}%</div>
-                                    <div style='background-color: #4caf50; width: 33%; text-align: center; color: white;'>Pref {pref_contrib:.1f}%</div>
+                            <div style='margin: 8px 0;'>
+                                <div style='display: flex; height: 28px; border-radius: 5px; overflow: hidden;'>
+                                    <div style='background-color: #1e88e5; width: {academic_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Academic {academic_contrib:.1f}%</div>
+                                    <div style='background-color: #fb8c00; width: {demo_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Demo {demo_contrib:.1f}%</div>
+                                    <div style='background-color: #4caf50; width: {pref_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Pref {pref_contrib:.1f}%</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
-
+                            
                             st.caption(f"Total: {prog['total_score']}% = Academic ({prog['academic_score']}% × 0.8) + Demographic ({prog['demographic_score']}% × 0.1) + Preference Bonus ({pref_bonus})")
+                            
+                            # Brief explanation
                             st.info(f"💡 {prog['explanation']}")
 
                     else:
+                        # Not eligible
                         st.markdown(f"""
-                        <div style='margin-bottom: 8px; padding: 8px; border-left: 5px solid #dc3545; border-radius: 5px; border: 1px solid #e0e0e0;'>
+                        <div style='margin-bottom: 8px; padding: 10px; border-left: 5px solid #dc3545; border-radius: 6px; background-color: #ffffff; border: 1px solid #e0e0e0;'>
                             <b>{i}. {prog['name']}</b><br>
-                            <span style='color: #dc3545;'>❌ Not eligible: {prog['reason']}</span>
+                            <span style='color: #dc3545; font-size: 0.85em;'>❌ Not eligible: {prog['reason']}</span>
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -768,8 +821,5 @@ if search_button:
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                     program_offered = str(row['KURSUSJAYA']).strip()
                     if program_offered != 'TIDAK DITAWARKAN':
-                        offered_info = check_offered_program(program_offered, original_choices)
-                        if offered_info['type'] == 'success':
-                            st.success(offered_info['message'])
-                        else:
-                            st.info(offered_info['message'])
+                        offered_msg = check_offered_program(program_offered, original_choices)
+                        st.success(offered_msg)
