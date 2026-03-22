@@ -713,7 +713,7 @@ if search_button:
                     <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>
                     <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>
                     <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                 </table>
+                </table>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -848,7 +848,7 @@ if search_button:
                     st.info("No original choices recorded")
                 
                 # ========================================
-                # PROGRAM RECOMMENDATIONS WITH SCORES IN EXPANDER TITLE
+                # PROGRAM RECOMMENDATIONS WITH NEW FORMAT
                 # ========================================
                 st.markdown("### 🎯 Program Recommendations")
                 st.caption("Click on any program to see detailed score breakdown")
@@ -859,40 +859,38 @@ if search_button:
                 # Display recommendations with expanders
                 for i, prog in enumerate(all_programs_with_scores, 1):
                     if prog['eligible']:
-                        star = "⭐ " if prog['in_original'] else ""
-                        
-                        # Determine suitability level emoji based on TOTAL score
+                        # Determine suitability level based on TOTAL score
                         if prog['total_score'] >= 80:
                             level_emoji = "🟢"
+                            level_text = "Highly Suitable"
                         elif prog['total_score'] >= 60:
                             level_emoji = "🟡"
+                            level_text = "Moderately Suitable"
                         else:
                             level_emoji = "🔴"
+                            level_text = "Less Suitable"
                         
-                        # Create expander title with program name and scores below
-                        # Using HTML to create two-line title
-                        expander_title = f"""
-                        <div style='line-height: 1.3;'>
-                            <div style='font-weight: bold;'>{i}. {star}{prog['name']}</div>
-                            <div style='font-size: 0.85em; margin-top: 4px;'>
-                                <span style='color: #1e88e5;'>🎯 Total: {prog['total_score']}%</span>
-                                <span style='color: #666; margin-left: 12px;'>📊 Eligibility: {prog['academic_score']}%</span>
-                            </div>
-                        </div>
-                        """
+                        star = "⭐ " if prog['in_original'] else ""
                         
-                        with st.expander(expander_title, expanded=False):
-                            # Inside expander - XAI breakdown
+                        # Create expander with title showing name only
+                        with st.expander(f"{i}. {star}{prog['name']}"):
+                            # Create two-column layout for status info
+                            col_status_left, col_status_right = st.columns([2, 1])
                             
-                            # Determine suitability level text
-                            if prog['total_score'] >= 80:
-                                level_text = "🟢 Highly Suitable"
-                            elif prog['total_score'] >= 60:
-                                level_text = "🟡 Moderately Suitable"
-                            else:
-                                level_text = "🔴 Less Suitable"
+                            with col_status_left:
+                                st.markdown(f"""
+                                <div style='margin-bottom: 10px;'>
+                                    <span style='font-size: 1.1em; font-weight: bold;'>{level_emoji} {level_text}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
                             
-                            st.markdown(f"**{level_text}**")
+                            with col_status_right:
+                                st.markdown(f"""
+                                <div style='margin-bottom: 10px; text-align: right;'>
+                                    <span style='font-size: 1em; color: #1e88e5;'>🎯 Total Suitability: {prog['total_score']}%</span><br>
+                                    <span style='font-size: 0.85em; color: #666;'>📊 Eligibility: {prog['academic_score']}%</span>
+                                </div>
+                                """, unsafe_allow_html=True)
                             
                             # Get detailed breakdown
                             detailed = prog['detailed']
@@ -1037,3 +1035,5 @@ if search_button:
                                 st.success(offered_info['message'])
                             else:
                                 st.info(f"{offered_info['message']}\n\n{offered_info.get('note', '')}")
+
+
