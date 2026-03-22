@@ -746,9 +746,9 @@ if search_button:
                             st.markdown(f"""
                             <div style='margin: 10px 0;'>
                                 <div style='display: flex; height: 30px; border-radius: 5px; overflow: hidden;'>
-                                    <div style='background-color: #1e88e5; width: {academic_contrib}%; text-align: center; color: white;'>Academic {academic_contrib:.1f}%</div>
-                                    <div style='background-color: #fb8c00; width: {demo_contrib}%; text-align: center; color: white;'>Demo {demo_contrib:.1f}%</div>
-                                    <div style='background-color: #4caf50; width: {pref_contrib}%; text-align: center; color: white;'>Pref {pref_contrib:.1f}%</div>
+                                    <div style='background-color: #1e88e5; width: 33%; text-align: center; color: white;'>Academic {academic_contrib:.1f}%</div>
+                                    <div style='background-color: #fb8c00; width: 34%; text-align: center; color: white;'>Demo {demo_contrib:.1f}%</div>
+                                    <div style='background-color: #4caf50; width: 33%; text-align: center; color: white;'>Pref {pref_contrib:.1f}%</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
