@@ -777,9 +777,11 @@ if search_button:
                             
                            original_choices_list = detailed.get('original_choices', [])
 if original_choices_list:
-    st.markdown("<span style='font-size: 0.75em; font-weight: bold;'>Your original choices:</span>", unsafe_allow_html=True)
+    st.markdown("**Your original choices:**")
     for j, choice in enumerate(original_choices_list, 1):
-        st.markdown(f"<span style='font-size: 0.7em;'>&nbsp;&nbsp;{j}. {choice[:60]}...</span>", unsafe_allow_html=True)
+        st.markdown(f"&nbsp;&nbsp;{j}. {choice[:60]}...")
+
+st.markdown("</div>", unsafe_allow_html=True)
 
                             # ============================================
                             # SCORE COMPOSITION
