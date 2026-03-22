@@ -797,9 +797,9 @@ if search_button:
                             st.markdown(f"""
                             <div style='margin: 8px 0;'>
                                 <div style='display: flex; height: 28px; border-radius: 5px; overflow: hidden;'>
-                                    <div style='background-color: #1e88e5; width: {academic_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Academic {academic_contrib:.1f}%</div>
-                                    <div style='background-color: #fb8c00; width: {demo_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Demo {demo_contrib:.1f}%</div>
-                                    <div style='background-color: #4caf50; width: {pref_contrib}%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Pref {pref_contrib:.1f}%</div>
+                                    <div style='background-color: #1e88e5; width: 33%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Academic {academic_contrib:.1f}%</div>
+                                    <div style='background-color: #fb8c00; width: 34%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Demo {demo_contrib:.1f}%</div>
+                                    <div style='background-color: #4caf50; width: 33%; text-align: center; color: white; font-size: 0.7em; line-height: 28px;'>Pref {pref_contrib:.1f}%</div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
