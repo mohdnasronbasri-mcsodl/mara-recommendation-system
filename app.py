@@ -780,7 +780,7 @@ if search_button:
                             if original_choices_list:
                                 st.markdown("<span style='font-size: 0.75em; font-weight: bold;'>Your original choices:</span>", unsafe_allow_html=True)
                                 for j, choice in enumerate(original_choices_list, 1):
-                                    st.markdown(f"<span style='font-size: 0.7em;'>&nbsp;&nbsp;{j}. {choice}...</span>", unsafe_allow_html=True)
+                                    st.markdown(f"<span style='font-size: 0.7em;'>&nbsp;&nbsp;{j}. {choice}</span>", unsafe_allow_html=True)
                             
                             st.markdown("</div>", unsafe_allow_html=True)
 
