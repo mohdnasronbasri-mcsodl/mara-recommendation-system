@@ -3,8 +3,6 @@ import pandas as pd
 import joblib
 import numpy as np
 
-# NO plotly import - removed!
-
 # Page config
 st.set_page_config(
     page_title="MARA Program Recommendation",
@@ -71,6 +69,322 @@ def grade_to_numeric(grade):
     return 0
 
 # ============================================
+# HELPER FUNCTION: COUNT SUBJECTS WITH MIN GRADE
+# ============================================
+def count_subjects_with_grade(row, subjects, min_grade):
+    """Count how many subjects have grade >= min_grade"""
+    count = 0
+    for subj in subjects:
+        if subj in row.index:
+            grade_val = grade_to_numeric(row.get(subj, 0))
+            if grade_val >= min_grade:
+                count += 1
+    return count
+
+# ============================================
+# CHECK ELIGIBILITY (UPDATED WITH NEW REQUIREMENTS)
+# ============================================
+def is_eligible(row, program):
+    """
+    Check if student meets minimum requirements for a program.
+    Returns (True/False, reason_if_not_eligible)
+    """
+    group = program.get('group', 1)
+    
+    # Helper function to get numeric grade
+    def get_grade(subject):
+        return grade_to_numeric(row.get(subject, 0))
+    
+    # ============================================
+    # GROUP 1: General Programs
+    # Requirements:
+    # - BM: at least C (60)
+    # - At least 3 subjects with C, INCLUDING BM
+    # - Math, English, History: at least E (40)
+    # ============================================
+    if group == 1:
+        # Check BM at least C
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        
+        # Check Math, English, History at least E
+        if get_grade('MAT') < 40:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ E / 40)"
+        if get_grade('BI') < 40:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ E / 40)"
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count subjects with C (including BM, Math, English, History, and others)
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
+        
+        if subjects_with_C < 3:
+            return False, f"Only {subjects_with_C} subjects with grade ≥ C (need at least 3, including BM)"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 2: CS/Marketing + Certification
+    # Requirements:
+    # - At least 5 subjects with C, INCLUDING BM
+    # - Math and English: at least B (75)
+    # - History: at least E (40)
+    # ============================================
+    elif group == 2:
+        # Check BM at least C
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        
+        # Check Math and English at least B
+        if get_grade('MAT') < 75:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ B / 75)"
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+        
+        # Check History at least E
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count subjects with C
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
+        
+        if subjects_with_C < 5:
+            return False, f"Only {subjects_with_C} subjects with grade ≥ C (need at least 5, including BM)"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 3: Computer Science (Basic)
+    # Requirements:
+    # - At least 5 subjects with C, INCLUDING BM and Mathematics
+    # - English and History: at least E (40)
+    # ============================================
+    elif group == 3:
+        # Check BM and Math at least C
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        if get_grade('MAT') < 60:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ C / 60)"
+        
+        # Check English and History at least E
+        if get_grade('BI') < 40:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ E / 40)"
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count subjects with C
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
+        
+        if subjects_with_C < 5:
+            return False, f"Only {subjects_with_C} subjects with grade ≥ C (need at least 5, including BM and Mathematics)"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 4: English Communication
+    # Requirements:
+    # - BM: at least C (60)
+    # - English: at least B (75)
+    # - Math: at least E (40)
+    # - History: at least E (40)
+    # - At least 1 other subject with C
+    # ============================================
+    elif group == 4:
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+        if get_grade('MAT') < 40:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ E / 40)"
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count other subjects with C
+        other_subjects = ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        other_with_C = count_subjects_with_grade(row, other_subjects, 60)
+        
+        if other_with_C < 1:
+            return False, f"Need at least 1 other subject with grade ≥ C (you have {other_with_C})"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 5: Accounting (Basic)
+    # Requirements:
+    # - At least 5 subjects with C, INCLUDING BM
+    # - English: at least B (75)
+    # - Mathematics and History: at least E (40)
+    # ============================================
+    elif group == 5:
+        # Check BM at least C
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        
+        # Check English at least B
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+        
+        # Check Math and History at least E
+        if get_grade('MAT') < 40:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ E / 40)"
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count subjects with C
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
+        
+        if subjects_with_C < 5:
+            return False, f"Only {subjects_with_C} subjects with grade ≥ C (need at least 5, including BM)"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 6: Accounting + SAP Certification
+    # Requirements:
+    # - At least 3 subjects with C, INCLUDING BM
+    # - Math and English: at least B (75)
+    # - History: at least E (40)
+    # ============================================
+    elif group == 6:
+        # Check BM at least C
+        if get_grade('BM') < 60:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
+        
+        # Check Math and English at least B
+        if get_grade('MAT') < 75:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ B / 75)"
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+        
+        # Check History at least E
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Count subjects with C
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
+        
+        if subjects_with_C < 3:
+            return False, f"Only {subjects_with_C} subjects with grade ≥ C (need at least 3, including BM)"
+        
+        return True, ""
+    
+    # ============================================
+    # GROUP 7: Engineering Foundation
+    # Requirements:
+    # - BM and Math: at least A- (85)
+    # - 5 subjects with B (75), including:
+    #   - English
+    #   - Additional Mathematics
+    #   - Physics OR Chemistry
+    #   - 2 other subjects (including History or others)
+    # - History: at least E (40)
+    # ============================================
+    elif group == 7:
+        # Check BM and Math at least A-
+        if get_grade('BM') < 85:
+            return False, f"BM: {row.get('BM', 'N/A')} (need ≥ A- / 85)"
+        if get_grade('MAT') < 85:
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ A- / 85)"
+        
+        # Check History at least E
+        if get_grade('SEJ') < 40:
+            return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
+        
+        # Check English at least B
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+        
+        # Check Additional Mathematics at least B
+        if get_grade('M-T') < 75:
+            return False, f"Additional Mathematics: {row.get('M-T', 'N/A')} (need ≥ B / 75)"
+        
+        # Check Physics OR Chemistry at least B
+        fizik = get_grade('FIZ')
+        kim = get_grade('KIM')
+        if max(fizik, kim) < 75:
+            return False, f"Physics/Chemistry: best = {max(fizik, kim)} (need at least one ≥ B / 75)"
+        
+        # Count subjects with B (need at least 5)
+        subjects_to_check_b = ['BI', 'M-T', 'FIZ', 'KIM', 'MAT', 'BM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'SEJ']
+        subjects_with_B = count_subjects_with_grade(row, subjects_to_check_b, 75)
+        
+        if subjects_with_B < 5:
+            return False, f"Only {subjects_with_B} subjects with grade ≥ B (need at least 5)"
+        
+        return True, ""
+    
+    # Default: not eligible
+    return False, "Program requirements not defined"
+
+# ============================================
+# CALCULATE SCORE (BASIC)
+# ============================================
+def calculate_score(row, program):
+    score = 0
+    total_weight = 0
+    group = program.get('group', 1)
+    
+    # Demographic (10%)
+    score += 10
+    total_weight += 10
+    
+    # Income (10%)
+    income = row.get('PENDAPATAN', 5000)
+    if income < 3000:
+        score += 10
+    elif income < 5000:
+        score += 8
+    elif income < 8000:
+        score += 6
+    else:
+        score += 4
+    total_weight += 10
+    
+    # Subjects (80%)
+    subject_count = 0
+    subject_total = 0
+    
+    # Define relevant subjects based on group
+    if group == 7:
+        relevant = ['BM', 'MAT', 'M-T', 'FIZ', 'KIM', 'BI']
+    elif group == 6:
+        relevant = ['BM', 'MAT', 'BI', 'ACC']
+    elif group == 5:
+        relevant = ['BM', 'MAT', 'BI', 'ACC']
+    elif group == 4:
+        relevant = ['BM', 'BI', 'MAT']
+    elif group in [2, 3]:
+        relevant = ['BM', 'MAT', 'BI', 'SK']
+    else:
+        relevant = ['BM', 'MAT', 'BI', 'SEJ']
+    
+    for subj in relevant:
+        if subj in row.index:
+            value = grade_to_numeric(row.get(subj, 0))
+            if value > 0:
+                subject_total += value
+                subject_count += 1
+    
+    if subject_count > 0:
+        average = subject_total / subject_count
+        score += average * 0.8
+        total_weight += 80
+    
+    base_score = score / total_weight * 100 if total_weight > 0 else 50
+    
+    # Group priority bonus
+    priority_bonus = {7: 20, 6: 15, 2: 12, 3: 10, 4: 8, 5: 5, 1: 0}
+    bonus = priority_bonus.get(group, 0)
+    base_score = min(base_score + bonus, 100)
+    
+    return round(base_score, 1)
+
+# ============================================
 # XAI: DETAILED SCORE BREAKDOWN
 # ============================================
 def calculate_detailed_score(row, program):
@@ -80,10 +394,6 @@ def calculate_detailed_score(row, program):
     
     group = program.get('group', 1)
     weights = GROUP_SUBJECT_WEIGHTS.get(group, GROUP_SUBJECT_WEIGHTS[1])
-    
-    # ============================================
-    # 1. ACADEMIC SCORE (80% of final)
-    # ============================================
     
     # Determine relevant subjects for this program group
     if group == 7:  # Engineering
@@ -130,14 +440,10 @@ def calculate_detailed_score(row, program):
     
     academic_score = min(academic_raw, 100)
     
-    # ============================================
-    # 2. DEMOGRAPHIC SCORE (10% of final)
-    # ============================================
-    
+    # Demographic Score
     demographic_breakdown = []
     demographic_total = 0
     
-    # Location score (max 50 points within demographic)
     location = row.get('LOKASI', 'URBAN')
     if location == 'RURAL':
         location_score = 50
@@ -155,21 +461,20 @@ def calculate_detailed_score(row, program):
         'note': location_note
     })
     
-    # Income score (max 50 points within demographic)
     income = row.get('PENDAPATAN', 5000)
-    if income < 3000:  # B40
+    if income < 3000:
         income_score = 50
         income_category = 'B40 (Low Income)'
         income_note = 'B40: maximum priority to support students from low-income families'
-    elif income < 5000:  # M40 lower
+    elif income < 5000:
         income_score = 40
         income_category = 'M40 (Lower Middle)'
         income_note = 'M40: high priority'
-    elif income < 8000:  # M40 upper
+    elif income < 8000:
         income_score = 30
         income_category = 'M40 (Upper Middle)'
         income_note = 'M40: moderate priority'
-    else:  # T20
+    else:
         income_score = 20
         income_category = 'T20 (High Income)'
         income_note = 'T20: base score'
@@ -183,20 +488,14 @@ def calculate_detailed_score(row, program):
         'note': income_note
     })
     
-    # Demographic score is out of 100
     demographic_score = demographic_total
     
-    # ============================================
-    # 3. PREFERENCE ALIGNMENT (10% of final, max 15 points)
-    # ============================================
-    
-    # Get original choices
+    # Preference Alignment
     original_choices = []
     for pil in ['PIL1', 'PIL2', 'PIL3']:
         if pil in row.index and pd.notna(row[pil]):
             original_choices.append(str(row[pil]).strip())
     
-    # Check if this program matches any original choice
     program_name = program['name']
     matched = False
     choice_number = None
@@ -207,7 +506,6 @@ def calculate_detailed_score(row, program):
             choice_number = i
             break
     
-    # Preference bonus (max 15 points)
     if matched:
         if choice_number == 1:
             preference_bonus = 15
@@ -222,16 +520,9 @@ def calculate_detailed_score(row, program):
         preference_bonus = 0
         preference_note = "✗ This program is not in your original choices"
     
-    # ============================================
-    # 4. CALCULATE TOTAL SCORE
-    # ============================================
-    
+    # Total Score
     total_score = (academic_score * 0.8) + (demographic_score * 0.1) + preference_bonus
     total_score = min(total_score, 100)
-    
-    # ============================================
-    # 5. RETURN DETAILED BREAKDOWN
-    # ============================================
     
     return {
         'total_score': round(total_score, 1),
@@ -260,225 +551,127 @@ def calculate_detailed_score(row, program):
     }
 
 # ============================================
-# CHECK ELIGIBILITY
-# ============================================
-def is_eligible(row, program):
-    syarat = program.get('syarat', {})
-    
-    # History
-    sejarah = grade_to_numeric(row.get('SEJ', 0))
-    if sejarah < syarat.get('SEJ', 40):
-        return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ {syarat.get('SEJ', 40)})"
-    
-    # BM
-    bm = grade_to_numeric(row.get('BM', 0))
-    if bm < syarat.get('BM', 60):
-        return False, f"BM: {row.get('BM', 'N/A')} (need ≥ {syarat.get('BM', 60)})"
-    
-    # Math
-    math = grade_to_numeric(row.get('MAT', 0))
-    if math < syarat.get('MAT', 0):
-        return False, f"Math: {row.get('MAT', 'N/A')} (need ≥ {syarat.get('MAT', 0)})"
-    
-    # English
-    bi = grade_to_numeric(row.get('BI', 0))
-    if 'BI' in syarat:
-        if bi < syarat['BI']:
-            return False, f"English: {row.get('BI', 'N/A')} (need ≥ {syarat['BI']})"
-    elif 'BI_min' in syarat:
-        if bi < syarat['BI_min']:
-            return False, f"English: {row.get('BI', 'N/A')} (need ≥ {syarat['BI_min']})"
-    
-    # Additional Math
-    if 'M-T' in syarat:
-        mt = grade_to_numeric(row.get('M-T', 0))
-        if mt < syarat['M-T']:
-            return False, f"Add Math: {row.get('M-T', 'N/A')} (need ≥ {syarat['M-T']})"
-    
-    # Science (Physics or Chemistry)
-    if 'sains_min' in syarat:
-        fizik = grade_to_numeric(row.get('FIZ', 0))
-        kim = grade_to_numeric(row.get('KIM', 0))
-        if max(fizik, kim) < syarat['sains_min']:
-            return False, f"Physics/Chemistry: best = {max(fizik, kim)} (need ≥ {syarat['sains_min']})"
-    
-    # Other subjects
-    if 'other_count' in syarat:
-        wajib = ['BM', 'BI', 'MAT', 'SEJ', 'M-T', 'FIZ', 'KIM']
-        other_subjects = [col for col in row.index if col not in wajib and col in SUBJECT_NAMES]
-        other_pass = 0
-        for subj in other_subjects:
-            if grade_to_numeric(row[subj]) >= syarat['other_min']:
-                other_pass += 1
-        if other_pass < syarat['other_count']:
-            return False, f"Only {other_pass}/{syarat['other_count']} other subjects ≥ {syarat['other_min']}"
-    
-    return True, ""
-
-# ============================================
-# CALCULATE SCORE (BASIC)
-# ============================================
-def calculate_score(row, program):
-    score = 0
-    total_weight = 0
-    
-    # Demographic (10%)
-    score += 10
-    total_weight += 10
-    
-    # Income (10%)
-    income = row.get('PENDAPATAN', 5000)
-    if income < 3000:
-        score += 10
-    elif income < 5000:
-        score += 8
-    elif income < 8000:
-        score += 6
-    else:
-        score += 4
-    total_weight += 10
-    
-    # Subjects (80%)
-    subject_count = 0
-    subject_total = 0
-    syarat = program.get('syarat', {})
-    all_subjects = []
-    for key in syarat:
-        if key in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
-            all_subjects.append(key)
-    
-    unique_subjects = list(set(all_subjects))
-    
-    for subj in unique_subjects:
-        if subj in ['BM', 'BI', 'MAT', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PI', 'PQS', 'PSI', 'SEJ']:
-            value = grade_to_numeric(row.get(subj, 0))
-            if value > 0:
-                subject_total += value
-                subject_count += 1
-    
-    if subject_count > 0:
-        average = subject_total / subject_count
-        score += average * 0.8
-        total_weight += 80
-    
-    base_score = score / total_weight * 100 if total_weight > 0 else 50
-    
-    # Group priority bonus
-    priority_bonus = {7: 20, 6: 15, 2: 12, 3: 10, 4: 8, 5: 5, 1: 0}
-    bonus = priority_bonus.get(program.get('group', 1), 0)
-    base_score = min(base_score + bonus, 100)
-    
-    return round(base_score, 1)
-
-# ============================================
 # GENERATE EXPLANATION
 # ============================================
 def generate_explanation(row, program):
     group = program.get('group', 0)
     reasons = []
     
+    def get_grade(subject):
+        return grade_to_numeric(row.get(subject, 0))
+    
     if group == 7:
-        if grade_to_numeric(row.get('M-T', 0)) >= 75:
+        if get_grade('M-T') >= 75:
             reasons.append(f"Add Math {row.get('M-T', '')} (≥B)")
-        if grade_to_numeric(row.get('FIZ', 0)) >= 75:
+        if get_grade('FIZ') >= 75:
             reasons.append(f"Physics {row.get('FIZ', '')} (≥B)")
-        if grade_to_numeric(row.get('KIM', 0)) >= 75:
+        if get_grade('KIM') >= 75:
             reasons.append(f"Chemistry {row.get('KIM', '')} (≥B)")
+        if get_grade('BM') >= 85:
+            reasons.append(f"BM {row.get('BM', '')} (≥A-)")
+        if get_grade('MAT') >= 85:
+            reasons.append(f"Math {row.get('MAT', '')} (≥A-)")
         if reasons:
-            return "Eligible for Foundation: " + ", ".join(reasons[:3])
-        return "Eligible for Foundation (minimum requirements met)"
+            return "Eligible for Engineering Foundation: " + ", ".join(reasons[:4])
+        return "Eligible for Engineering Foundation"
     
     elif group == 6:
-        if grade_to_numeric(row.get('ACC', 0)) >= 75:
+        if get_grade('ACC') >= 75:
             reasons.append(f"ACC {row.get('ACC', '')} (≥B)")
-        if grade_to_numeric(row.get('MAT', 0)) >= 75:
+        if get_grade('MAT') >= 75:
             reasons.append(f"Math {row.get('MAT', '')} (≥B)")
+        if get_grade('BI') >= 75:
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
         if reasons:
             return "Eligible for Accounting + SAP: " + ", ".join(reasons)
         return "Eligible for Accounting + SAP"
     
-    elif group == 2:
-        if grade_to_numeric(row.get('MAT', 0)) >= 75:
-            reasons.append(f"Math {row.get('MAT', '')} (≥B)")
-        if grade_to_numeric(row.get('BI', 0)) >= 75:
+    elif group == 5:
+        if get_grade('ACC') >= 60:
+            reasons.append(f"ACC {row.get('ACC', '')} (≥C)")
+        if get_grade('MAT') >= 40:
+            reasons.append(f"Math {row.get('MAT', '')} (≥E)")
+        if get_grade('BI') >= 75:
             reasons.append(f"English {row.get('BI', '')} (≥B)")
+        if reasons:
+            return "Eligible for Accounting Basic: " + ", ".join(reasons)
+        return "Eligible for Accounting Basic"
+    
+    elif group == 4:
+        if get_grade('BI') >= 75:
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
+        if get_grade('BM') >= 60:
+            reasons.append(f"BM {row.get('BM', '')} (≥C)")
+        if reasons:
+            return "Eligible for English Communication: " + ", ".join(reasons)
+        return "Eligible for English Communication"
+    
+    elif group == 3:
+        if get_grade('MAT') >= 60:
+            reasons.append(f"Math {row.get('MAT', '')} (≥C)")
+        if get_grade('SK') >= 60:
+            reasons.append(f"Computer Science {row.get('SK', '')} (≥C)")
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        if subjects_with_C >= 5:
+            reasons.append(f"{subjects_with_C} subjects with grade ≥C")
+        if reasons:
+            return "Eligible for CS Basic: " + ", ".join(reasons)
+        return "Eligible for CS Basic"
+    
+    elif group == 2:
+        if get_grade('MAT') >= 75:
+            reasons.append(f"Math {row.get('MAT', '')} (≥B)")
+        if get_grade('BI') >= 75:
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
+        if get_grade('SK') >= 60:
+            reasons.append(f"Computer Science {row.get('SK', '')} (≥C)")
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        if subjects_with_C >= 5:
+            reasons.append(f"{subjects_with_C} subjects with grade ≥C")
         if reasons:
             return "Eligible for CS/Marketing + Certification: " + ", ".join(reasons)
         return "Eligible for CS/Marketing + Certification"
     
-    elif group == 3:
-        if grade_to_numeric(row.get('MAT', 0)) >= 60:
-            reasons.append(f"Math {row.get('MAT', '')} (≥C)")
-        return "Eligible for CS Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
-    
-    elif group == 4:
-        if grade_to_numeric(row.get('BI', 0)) >= 75:
-            reasons.append(f"English {row.get('BI', '')} (≥B)")
-        return "Eligible for English Communication: " + ", ".join(reasons) if reasons else "Eligible for English Communication"
-    
-    elif group == 5:
-        if grade_to_numeric(row.get('MAT', 0)) >= 60:
-            reasons.append(f"Math {row.get('MAT', '')} (≥C)")
-        return "Eligible for Accounting Basic: " + ", ".join(reasons) if reasons else "Eligible for Accounting Basic"
-    
     else:  # Group 1
-        if grade_to_numeric(row.get('BM', 0)) >= 60:
+        if get_grade('BM') >= 60:
             reasons.append(f"BM {row.get('BM', '')} (≥C)")
-        other_count = 0
-        for subj in ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO']:
-            if grade_to_numeric(row.get(subj, 0)) >= 60:
-                other_count += 1
-        if other_count >= 2:
-            reasons.append(f"{other_count} other subjects ≥C")
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        if subjects_with_C >= 3:
+            reasons.append(f"{subjects_with_C} subjects with grade ≥C (including BM)")
         return "Eligible for General Programs: " + ", ".join(reasons) if reasons else "Eligible for General Programs"
 
 # ============================================
-# ALL PROGRAMS
+# ALL PROGRAMS (UPDATED WITH GROUP NUMBERS)
 # ============================================
 ALL_PROGRAMS = [
-    # GROUP 1
-    {'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Halal Industry + Halal Executive Certification', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Business Studies', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Business Information Technology', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in International Business', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Creative Digital Media Production', 'group': 1,
-     'syarat': {'BM': 60, 'MAT': 40, 'SEJ': 40, 'BI_min': 40, 'other_count': 2, 'other_min': 60}},
+    # GROUP 1 - General Programs
+    {'name': 'Diploma in Integrated Logistics Management + Chartered Institute of Logistics and Transport', 'group': 1},
+    {'name': 'Diploma in Halal Industry + Halal Executive Certification', 'group': 1},
+    {'name': 'Diploma in Islamic Finance + Associate Qualification in Islamic Finance', 'group': 1},
+    {'name': 'Diploma in Business Studies', 'group': 1},
+    {'name': 'Diploma in Business Information Technology', 'group': 1},
+    {'name': 'Diploma in International Business', 'group': 1},
+    {'name': 'Diploma in Creative Digital Media Production', 'group': 1},
     
-    # GROUP 2
-    {'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification', 'group': 2,
-     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}},
-    {'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification', 'group': 2,
-     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 2, 'other_min': 60}},
+    # GROUP 2 - CS/Marketing + Certification
+    {'name': 'Diploma in Computer Science + SAS@Certified Specialist: Visual Business Analytics Certification', 'group': 2},
+    {'name': 'Diploma in Marketing + Certified Professional Marketer (Asia) Certification', 'group': 2},
     
-    # GROUP 3
-    {'name': 'Diploma in Computer Science', 'group': 3,
-     'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 3, 'other_min': 60}},
+    # GROUP 3 - Computer Science (Basic)
+    {'name': 'Diploma in Computer Science', 'group': 3},
     
-    # GROUP 4
-    {'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM', 'group': 4,
-     'syarat': {'BM': 60, 'BI': 75, 'MAT': 40, 'SEJ': 40, 'other_count': 1, 'other_min': 60}},
+    # GROUP 4 - English Communication
+    {'name': 'Diploma in English Communication + Sijil Penterjemahan Bahasa ITBM', 'group': 4},
     
-    # GROUP 5
-    {'name': 'Diploma in Accounting', 'group': 5,
-     'syarat': {'BM': 60, 'MAT': 60, 'SEJ': 40, 'BI_min': 40, 'other_count': 1, 'other_min': 60}},
+    # GROUP 5 - Accounting (Basic)
+    {'name': 'Diploma in Accounting', 'group': 5},
     
-    # GROUP 6
-    {'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification', 'group': 6,
-     'syarat': {'BM': 60, 'BI': 75, 'MAT': 75, 'SEJ': 40, 'other_count': 1, 'other_min': 60}},
+    # GROUP 6 - Accounting + SAP Certification
+    {'name': 'Diploma in Accounting + SAP S/4HANA Financial Accounting Associates Certification', 'group': 6},
     
-    # GROUP 7
-    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia', 'group': 7,
-     'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}},
-    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah', 'group': 7,
-     'syarat': {'BM': 85, 'MAT': 85, 'M-T': 75, 'SEJ': 40, 'sains_min': 75, 'other_count': 2, 'other_min': 75}},
+    # GROUP 7 - Engineering Foundation
+    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Teknologi Malaysia', 'group': 7},
+    {'name': 'Asasi Kejuruteraan & Teknologi - Universiti Malaysia Pahang Al-Sultan Abdullah', 'group': 7},
 ]
 
 # ============================================
@@ -546,13 +739,13 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%; border-collapse: collapse; background-color: transparent;'>
-                    <tr><td style='padding: 6px; color: #000000;'><b>NOKP</b></td><td style='padding: 6px; color: #000000;'>{row['NOKP']}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'><b>Name</b></td><td style='padding: 6px; color: #000000;'>{row['NAMA']}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'><b>Gender</b></td><td style='padding: 6px; color: #000000;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'><b>Location</b></td><td style='padding: 6px; color: #000000;'>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'><b>Academic Stream</b></td><td style='padding: 6px; color: #000000;'>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px; color: #000000;'><b>Parental Income</b></td><td style='padding: 6px; color: #000000;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                 </table>
+                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td>{row['NOKP']}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Name</b></td><td>{row['NAMA']}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Gender</b></td><td>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Location</b></td><td>{row.get('LOKASI', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td>{row.get('ALIRAN', 'N/A')}</td></tr>
+                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                </table>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -570,7 +763,16 @@ if search_button:
                     if code in row.index:
                         grade = row.get(code)
                         if pd.notna(grade) and grade != 'NA' and grade != '':
-                            subject_data.append({"Subject": name, "Grade": grade})
+                            numeric = grade_to_numeric(grade)
+                            if numeric >= 85:
+                                grade_display = f"🟢 {grade}"
+                            elif numeric >= 75:
+                                grade_display = f"🔵 {grade}"
+                            elif numeric >= 60:
+                                grade_display = f"🟡 {grade}"
+                            else:
+                                grade_display = f"🔴 {grade}"
+                            subject_data.append({"Subject": name, "Grade": grade_display})
                 
                 if subject_data:
                     df_subjects = pd.DataFrame(subject_data)
@@ -805,7 +1007,7 @@ if search_button:
                             demo_contrib = detailed['demographic_score'] * 0.1
                             pref_contrib = detailed['preference_bonus']
                             
-                            # Simple bar using st.progress
+                            # Simple bar using HTML/CSS
                             st.markdown(f"""
                             <div style='margin: 10px 0;'>
                                 <div style='display: flex; height: 30px; border-radius: 5px; overflow: hidden;'>
