@@ -97,10 +97,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 1: General Programs
-    # Requirements:
-    # - BM: at least C (60)
-    # - At least 3 subjects with C, INCLUDING BM
-    # - Math, English, History: at least E (40)
     # ============================================
     if group == 1:
         # Check BM at least C
@@ -115,7 +111,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
         
-        # Count subjects with C (including BM, Math, English, History, and others)
+        # Count subjects with C
         subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
         
@@ -126,10 +122,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 2: CS/Marketing + Certification
-    # Requirements:
-    # - At least 5 subjects with C, INCLUDING BM
-    # - Math and English: at least B (75)
-    # - History: at least E (40)
     # ============================================
     elif group == 2:
         # Check BM at least C
@@ -157,9 +149,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 3: Computer Science (Basic)
-    # Requirements:
-    # - At least 5 subjects with C, INCLUDING BM and Mathematics
-    # - English and History: at least E (40)
     # ============================================
     elif group == 3:
         # Check BM and Math at least C
@@ -185,12 +174,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 4: English Communication
-    # Requirements:
-    # - BM: at least C (60)
-    # - English: at least B (75)
-    # - Math: at least E (40)
-    # - History: at least E (40)
-    # - At least 1 other subject with C
     # ============================================
     elif group == 4:
         if get_grade('BM') < 60:
@@ -213,10 +196,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 5: Accounting (Basic)
-    # Requirements:
-    # - At least 5 subjects with C, INCLUDING BM
-    # - English: at least B (75)
-    # - Mathematics and History: at least E (40)
     # ============================================
     elif group == 5:
         # Check BM at least C
@@ -244,10 +223,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 6: Accounting + SAP Certification
-    # Requirements:
-    # - At least 3 subjects with C, INCLUDING BM
-    # - Math and English: at least B (75)
-    # - History: at least E (40)
     # ============================================
     elif group == 6:
         # Check BM at least C
@@ -275,14 +250,6 @@ def is_eligible(row, program):
     
     # ============================================
     # GROUP 7: Engineering Foundation
-    # Requirements:
-    # - BM and Math: at least A- (85)
-    # - 5 subjects with B (75), including:
-    #   - English
-    #   - Additional Mathematics
-    #   - Physics OR Chemistry
-    #   - 2 other subjects (including History or others)
-    # - History: at least E (40)
     # ============================================
     elif group == 7:
         # Check BM and Math at least A-
@@ -851,7 +818,7 @@ if search_button:
                     st.info("No original choices recorded")
                 
                 # ========================================
-                # PROGRAM RECOMMENDATIONS WITH XAI
+                # PROGRAM RECOMMENDATIONS WITH NEW DISPLAY FORMAT
                 # ========================================
                 st.markdown("### 🎯 Program Recommendations")
                 st.caption("Click on any program to see detailed score breakdown")
@@ -876,35 +843,45 @@ if search_button:
                         'reason': reason if not eligible else ""
                     })
                 
-                # Sort by score (highest first)
+                # Sort by score (highest first) - Kekal
                 all_programs.sort(key=lambda x: -x['score'])
                 
                 st.caption(f"📊 Showing {len([p for p in all_programs if p['eligible']])} eligible programs out of {len(all_programs)} total")
                 
-                # Display recommendations with expanders for XAI
+                # ============================================
+                # NEW DISPLAY FORMAT - Yang Diubah
+                # ============================================
                 for i, prog in enumerate(all_programs, 1):
                     if prog['eligible']:
-                        # Get detailed score breakdown for XAI
-                        detailed = calculate_detailed_score(row, prog)
-                        
+                        # Determine suitability level and emoji
                         if prog['score'] >= 80:
-                            color = "#28a745"
-                            level = "🟢 Highly Suitable"
+                            level_emoji = "🟢"
+                            level_text = "Highly Suitable"
                         elif prog['score'] >= 60:
-                            color = "#ffc107"
-                            level = "🟡 Moderately Suitable"
+                            level_emoji = "🟡"
+                            level_text = "Moderately Suitable"
                         else:
-                            color = "#dc3545"
-                            level = "🔴 Less Suitable"
+                            level_emoji = "🔴"
+                            level_text = "Less Suitable"
                         
-                        star = " ⭐" if prog['in_original'] else ""
+                        star = "⭐ " if prog['in_original'] else ""
                         
-                        # Create expander for detailed breakdown
-                        with st.expander(f"{i}. {prog['name']}{star} - {level} ({prog['score']}%)"):
+                        # Create expander with new format
+                        with st.expander(f"{i}. {star}{prog['name']}"):
+                            # Display status and score
+                            st.markdown(f"""
+                            <div style='margin-bottom: 10px;'>
+                                <span style='font-size: 1.1em; font-weight: bold;'>{level_emoji} {level_text}</span><br>
+                                <span style='font-size: 1em; color: #1e88e5;'>🎯 Total Suitability Score: {prog['score']}%</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # Get detailed score breakdown for XAI
+                            detailed = calculate_detailed_score(row, prog)
+                            
                             # Main score display with formula
                             st.markdown(f"""
                             <div style='margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px;'>
-                                <h4 style='margin: 0; color: {color};'>🎯 Total Suitability Score: {detailed['total_score']}%</h4>
                                 <p style='margin: 5px 0 0 0; font-size: 0.85em;'><b>Formula:</b> {detailed['weight_formula']}</p>
                                 <p style='margin: 2px 0 0 0; font-size: 0.75em; color: #666;'>{detailed['formula_explanation']}</p>
                             </div>
