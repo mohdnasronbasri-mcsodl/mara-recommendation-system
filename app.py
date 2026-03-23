@@ -551,22 +551,19 @@ if search_button:
             with col_left:
                 st.markdown("### 👤 Student Profile")
 
+                # Format NOKP with leading zero (12 digits)
+                nokp_display = str(row['NOKP']).zfill(12)
+                
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%;'>
-                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td>
-                    </tr>
-                    <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td>
-                    </tr>
-                    <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td>
-                    </tr>
-                    <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td>
-                    </tr>
-                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td>
-                    </tr>
-                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td>
-                    </tr>
-                 </table>
+                     <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{nokp_display}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>
+                     <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
+                </table>
                 </div>
                 """, unsafe_allow_html=True)
 
