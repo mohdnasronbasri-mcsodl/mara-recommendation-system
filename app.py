@@ -99,7 +99,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
 
         if subjects_with_C < 3:
@@ -117,7 +117,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
 
         if subjects_with_C < 5:
@@ -135,7 +135,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
 
         if subjects_with_C < 5:
@@ -153,7 +153,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        other_subjects = ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        other_subjects = ['M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         other_with_C = count_subjects_with_grade(row, other_subjects, 60)
 
         if other_with_C < 1:
@@ -171,7 +171,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
 
         if subjects_with_C < 5:
@@ -189,7 +189,7 @@ def is_eligible(row, program):
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
-        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT']
+        subjects_to_check = ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_C = count_subjects_with_grade(row, subjects_to_check, 60)
 
         if subjects_with_C < 3:
@@ -214,7 +214,7 @@ def is_eligible(row, program):
         if max(fizik, kim) < 75:
             return False, f"Physics/Chemistry: best = {max(fizik, kim)} (need at least one ≥ B / 75)"
 
-        subjects_to_check_b = ['BI', 'M-T', 'FIZ', 'KIM', 'MAT', 'BM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'SEJ']
+        subjects_to_check_b = ['BI', 'M-T', 'FIZ', 'KIM', 'MAT', 'BM', 'BIO', 'ACC', 'PT', 'EKO', 'SK', 'PI', 'PQS', 'PSI', 'BAT', 'SEJ', 'TSI', 'AWB', 'BC', 'RGD', 'MUL']
         subjects_with_B = count_subjects_with_grade(row, subjects_to_check_b, 75)
 
         if subjects_with_B < 5:
@@ -249,15 +249,15 @@ def calculate_score(row, program):
     subject_total = 0
 
     if group == 7:
-        relevant = ['BM', 'MAT', 'M-T', 'FIZ', 'KIM', 'BI']
+        relevant = ['BM', 'MAT', 'M-T', 'FIZ', 'KIM', 'BI', 'SEJ']
     elif group == 6:
-        relevant = ['BM', 'MAT', 'BI', 'ACC']
+        relevant = ['BM', 'MAT', 'BI', 'ACC', 'SEJ']
     elif group == 5:
-        relevant = ['BM', 'MAT', 'BI', 'ACC']
+        relevant = ['BM', 'MAT', 'BI', 'ACC', 'SEJ']
     elif group == 4:
-        relevant = ['BM', 'BI', 'MAT']
+        relevant = ['BM', 'BI', 'MAT', 'SEJ']
     elif group in [2, 3]:
-        relevant = ['BM', 'MAT', 'BI', 'SK']
+        relevant = ['BM', 'MAT', 'BI', 'SK', 'SEJ']
     else:
         relevant = ['BM', 'MAT', 'BI', 'SEJ']
 
@@ -289,15 +289,15 @@ def calculate_detailed_score(row, program):
     weights = GROUP_SUBJECT_WEIGHTS.get(group, GROUP_SUBJECT_WEIGHTS[1])
 
     if group == 7:
-        relevant_subjects = ['M-T', 'FIZ', 'KIM', 'MAT', 'BM', 'BI']
+        relevant_subjects = ['M-T', 'FIZ', 'KIM', 'MAT', 'BM', 'BI', 'SEJ']
     elif group == 6:
-        relevant_subjects = ['ACC', 'MAT', 'BI', 'BM']
+        relevant_subjects = ['ACC', 'MAT', 'BI', 'BM', 'SEJ']
     elif group == 5:
-        relevant_subjects = ['MAT', 'ACC', 'BM']
+        relevant_subjects = ['ACC', 'MAT', 'BM', 'BI', 'SEJ']
     elif group == 4:
         relevant_subjects = ['BI', 'BM', 'SEJ']
     elif group in [2, 3]:
-        relevant_subjects = ['MAT', 'BI', 'SK', 'BM']
+        relevant_subjects = ['MAT', 'BI', 'SK', 'BM', 'SEJ']
     else:
         relevant_subjects = ['BM', 'MAT', 'BI', 'SEJ']
 
@@ -423,6 +423,8 @@ def generate_explanation(row, program):
             reasons.append(f"ACC {row.get('ACC', '')} (≥B)")
         if get_grade('MAT') >= 75:
             reasons.append(f"Math {row.get('MAT', '')} (≥B)")
+        if get_grade('BI') >= 75:
+            reasons.append(f"English {row.get('BI', '')} (≥B)")
         if reasons:
             return "Eligible for Accounting + SAP: " + ", ".join(reasons)
         return "Eligible for Accounting + SAP"
@@ -441,23 +443,23 @@ def generate_explanation(row, program):
     elif group == 3:
         if get_grade('MAT') >= 60:
             reasons.append(f"Math {row.get('MAT', '')} (≥C)")
-        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'TSI', 'AWB', 'BC', 'RGD', 'MUL'], 60)
         if subjects_with_C >= 5:
             reasons.append(f"{subjects_with_C} subjects ≥C")
-        return "Eligible for CS Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
+        return "Eligible for Computer Science Basic: " + ", ".join(reasons) if reasons else "Eligible for CS Basic"
     elif group == 2:
         if get_grade('MAT') >= 75:
             reasons.append(f"Math {row.get('MAT', '')} (≥B)")
         if get_grade('BI') >= 75:
             reasons.append(f"English {row.get('BI', '')} (≥B)")
-        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'TSI', 'AWB', 'BC', 'RGD', 'MUL'], 60)
         if subjects_with_C >= 5:
             reasons.append(f"{subjects_with_C} subjects ≥C")
-        return "Eligible for CS/Marketing + Certification: " + ", ".join(reasons) if reasons else "Eligible for CS/Marketing + Certification"
+        return "Eligible for  Computer Science/Marketing + Certification: " + ", ".join(reasons) if reasons else "Eligible for CS/Marketing + Certification"
     else:
         if get_grade('BM') >= 60:
             reasons.append(f"BM {row.get('BM', '')} (≥C)")
-        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC'], 60)
+        subjects_with_C = count_subjects_with_grade(row, ['BM', 'MAT', 'BI', 'SEJ', 'M-T', 'FIZ', 'KIM', 'BIO', 'ACC', 'TSI', 'AWB', 'BC', 'RGD', 'MUL'], 60)
         if subjects_with_C >= 3:
             reasons.append(f"{subjects_with_C} subjects ≥C (including BM)")
         return "Eligible for General Programs: " + ", ".join(reasons) if reasons else "Eligible for General Programs"
@@ -574,7 +576,10 @@ if search_button:
                     
                     **Preference Bonus:** 1st choice +15, 2nd +12, 3rd +10
 
-                    **Suitability Levels:** 🟢 ≥80% Highly Suitable | 🟡 60-79% Moderately Suitable | 🔴 <60% Less Suitable
+                    **Suitability Levels:** 
+                    🟢 ≥80% Highly Suitable  
+                    🟡 60-79% Moderately Suitable 
+                    🔴 <60% Less Suitable
                     """)
 
             with col_right:
