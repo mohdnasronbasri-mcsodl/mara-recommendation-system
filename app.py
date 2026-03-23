@@ -502,8 +502,7 @@ def check_offered_program(program_ditawar, original_choices):
         if program_ditawar.lower() in p.lower():
             return f"✅ Program Offered: {program_ditawar} (Choice {i})"
 
-    return f"✅ Program Offered: 
-    {program_ditawar}"
+    return f"✅ Offered: {program_ditawar}"
 
 # ============================================
 # SIDEBAR
