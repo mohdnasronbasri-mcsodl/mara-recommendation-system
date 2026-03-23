@@ -506,7 +506,7 @@ def check_offered_program(program_ditawar, original_choices):
 # MARA Logo at the top of sidebar - centered
 col1, col2, col3 = st.sidebar.columns([1, 2, 1])
 with col2:
-    st.image("https://photos.smugmug.com/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd/0/Kkb8LcCXXZcpDqr9scB36rcD6FvXG2DM2gdpwB5kT/X2/logo%20mara%202021-01-X2.png", width=120)
+    st.image("https://photos.smugmug.com/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd/0/Kkb8LcCXXZcpDqr9scB36rcD6FvXG2DM2gdpwB5kT/X2/logo%20mara%202021-01-X2.png", width=180)
 st.sidebar.markdown("---")
 
 st.sidebar.header("🔍 Search Student")
