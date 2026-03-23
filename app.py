@@ -553,7 +553,50 @@ if search_button:
                 </table>
                 </div>
                 """, unsafe_allow_html=True)
-
+                                # ============================================
+                # OFFERED PROGRAM STATUS (with explanation)
+                # ============================================
+                if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
+                    program_offered = str(row['KURSUSJAYA']).strip()
+                    
+                    # Check if student was offered
+                    if program_offered != 'TIDAK DITAWARKAN':
+                        # Student was offered - find choice number if available
+                        offered_choice = None
+                        for i, p in enumerate(original_choices, 1):
+                            if program_offered.lower() in p.lower():
+                                offered_choice = i
+                                break
+                        
+                        if offered_choice:
+                            st.success(f"✅ **Program Offered:** {program_offered} (Choice {offered_choice})")
+                        else:
+                            st.success(f"✅ **Program Offered:** {program_offered}")
+                    
+                    else:
+                        # Student was NOT offered - check if eligible for any program
+                        eligible_for_any = any(p['eligible'] for p in all_programs_with_scores)
+                        
+                        if eligible_for_any:
+                            st.info(f"""
+                            ❌ **Not Offered**
+                            
+                            Student met the eligibility requirements but was not offered a place.
+                            This may be due to:
+                            • Limited quota availability
+                            • Program capacity being fully filled
+                            • Competitive selection among eligible candidates
+                            
+                            *The system recommendations above show programs the student is eligible for.*
+                            """)
+                        else:
+                            st.warning(f"""
+                            ❌ **Not Offered**
+                            
+                            Student does not meet the minimum requirements for any program.
+                            
+                            **Reason:** {', '.join([p['reason'] for p in all_programs_with_scores if not p['eligible']][:2])}
+                            """)
                 # SPM Subjects
                 st.markdown("### 📚 SPM Subjects")
                 subject_data = []
