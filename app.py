@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # Display MARA logo and title
-col_logo, col_title = st.columns([1, 5])
+col_logo, col_title = st.columns([1, 2])
 with col_logo:
     st.image("https://photos.smugmug.com/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd/0/Kkb8LcCXXZcpDqr9scB36rcD6FvXG2DM2gdpwB5kT/X2/logo%20mara%202021-01-X2.png", width=60)
 with col_title:
@@ -507,6 +507,8 @@ def check_offered_program(program_ditawar, original_choices):
 # ============================================
 # SIDEBAR
 # ============================================
+
+
 st.sidebar.header("🔍 Search Student")
 search_by = st.sidebar.radio("Search by:", ["NOKP", "Name"])
 
