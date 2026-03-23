@@ -504,9 +504,9 @@ def check_offered_program(program_ditawar, original_choices):
 # SIDEBAR
 # ============================================
 # MARA Logo at the top of sidebar - centered
-st.sidebar.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
-st.sidebar.image("https://photos.smugmug.com/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd/0/Kkb8LcCXXZcpDqr9scB36rcD6FvXG2DM2gdpwB5kT/X2/logo%20mara%202021-01-X2.png", width=120)
-st.sidebar.markdown("</div>", unsafe_allow_html=True)
+col1, col2, col3 = st.sidebar.columns([1, 2, 1])
+with col2:
+    st.image("https://photos.smugmug.com/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd/0/Kkb8LcCXXZcpDqr9scB36rcD6FvXG2DM2gdpwB5kT/X2/logo%20mara%202021-01-X2.png", width=100)
 st.sidebar.markdown("---")
 
 st.sidebar.header("🔍 Search Student")
