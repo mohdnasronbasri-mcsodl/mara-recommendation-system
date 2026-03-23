@@ -10,8 +10,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# Title
-st.title("🎓 MARA Program Recommendation System")
+# Display MARA logo and title
+col_logo, col_title = st.columns([1, 5])
+with col_logo:
+    st.image("https://galeri.mara.gov.my/REKABENTUK/LOGO/KOLEKSI-LOGO/i-j2SVDpd", width=60)
+with col_title:
+    st.title("MARA Program Recommendation System")
 
 # Load model and data
 @st.cache_resource
@@ -544,18 +548,31 @@ if search_button:
                 st.markdown(f"""
                 <div style='background-color: #FFFFFF; padding: 10px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0;'>
                 <table style='width:100%;'>
-                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td></tr>
-                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td></tr>
-                </table>
+                    <tr><td style='padding: 6px;'><b>NOKP</b></td><td style='padding: 6px;'>{row['NOKP']}</td>
+                    </tr>
+                    <tr><td style='padding: 6px;'><b>Name</b></td><td style='padding: 6px;'>{row['NAMA']}</td>
+                    </tr>
+                    <tr><td style='padding: 6px;'><b>Gender</b></td><td style='padding: 6px;'>{'Female' if row.get('JANTINA')=='P' else 'Male'}</td>
+                    </tr>
+                    <tr><td style='padding: 6px;'><b>Location</b></td><td style='padding: 6px;'>{row.get('LOKASI', 'N/A')}</td>
+                    </tr>
+                    <tr><td style='padding: 6px;'><b>Academic Stream</b></td><td style='padding: 6px;'>{row.get('ALIRAN', 'N/A')}</td>
+                    </tr>
+                    <tr><td style='padding: 6px;'><b>Parental Income</b></td><td style='padding: 6px;'>RM {row.get('PENDAPATAN', 0):,.0f}</td>
+                    </tr>
+                 </table>
                 </div>
                 """, unsafe_allow_html=True)
-                                # ============================================
+
+                # ============================================
                 # OFFERED PROGRAM STATUS (with explanation)
                 # ============================================
+                # Get original choices first (need to define here for offered status)
+                original_choices_for_status = []
+                for pil in ['PIL1', 'PIL2', 'PIL3']:
+                    if pil in row.index and pd.notna(row[pil]):
+                        original_choices_for_status.append(str(row[pil]).strip())
+                
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                     program_offered = str(row['KURSUSJAYA']).strip()
                     
@@ -563,7 +580,7 @@ if search_button:
                     if program_offered != 'TIDAK DITAWARKAN':
                         # Student was offered - find choice number if available
                         offered_choice = None
-                        for i, p in enumerate(original_choices, 1):
+                        for i, p in enumerate(original_choices_for_status, 1):
                             if program_offered.lower() in p.lower():
                                 offered_choice = i
                                 break
@@ -575,7 +592,12 @@ if search_button:
                     
                     else:
                         # Student was NOT offered - check if eligible for any program
-                        eligible_for_any = any(p['eligible'] for p in all_programs_with_scores)
+                        # Need to evaluate eligibility first
+                        temp_eligible_list = []
+                        for prog in ALL_PROGRAMS:
+                            eligible, _ = is_eligible(row, prog)
+                            temp_eligible_list.append(eligible)
+                        eligible_for_any = any(temp_eligible_list)
                         
                         if eligible_for_any:
                             st.info(f"""
@@ -587,16 +609,15 @@ if search_button:
                             • Program capacity being fully filled
                             • Competitive selection among eligible candidates
                             
-                            *The system recommendations above show programs the student is eligible for.*
+                            *The system recommendations below show programs the student is eligible for.*
                             """)
                         else:
                             st.warning(f"""
                             ❌ **Not Offered**
                             
                             Student does not meet the minimum requirements for any program.
-                            
-                            **Reason:** {', '.join([p['reason'] for p in all_programs_with_scores if not p['eligible']][:2])}
                             """)
+
                 # SPM Subjects
                 st.markdown("### 📚 SPM Subjects")
                 subject_data = []
@@ -870,7 +891,7 @@ if search_button:
                         </div>
                         """, unsafe_allow_html=True)
 
-                # Offered Program Display
+                # Offered Program Display (at bottom - keep existing)
                 if 'KURSUSJAYA' in row.index and pd.notna(row['KURSUSJAYA']):
                     program_offered = str(row['KURSUSJAYA']).strip()
                     if program_offered != 'TIDAK DITAWARKAN':
