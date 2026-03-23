@@ -530,7 +530,13 @@ if search_button:
             st.stop()
 
         if search_by == "NOKP":
-            student = df[df['NOKP'].astype(str).str.contains(nokp_input, na=False)]
+            # Convert NOKP to string with 12-digit format
+            df['NOKP_STR'] = df['NOKP'].astype(str).str.zfill(12)
+            
+            # Pad search input to 12 digits
+            search_nokp = nokp_input.strip().zfill(12)
+            
+            student = df[df['NOKP_STR'].str.contains(search_nokp, na=False)]
         else:
             df['NAMA'] = df['NAMA'].fillna('')
             student = df[df['NAMA'].str.contains(name_input, case=False, na=False)]
