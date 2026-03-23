@@ -164,10 +164,10 @@ def is_eligible(row, program):
     elif group == 5:
         if get_grade('BM') < 60:
             return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
-        if get_grade('BI') < 75:
-            return False, f"English: {row.get('BI', 'N/A')} (need ≥ E / 40)"
         if get_grade('MAT') < 40:
             return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ C / 60)"
+        if get_grade('BI') < 75:
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ E / 40)"
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
