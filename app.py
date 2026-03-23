@@ -165,9 +165,9 @@ def is_eligible(row, program):
         if get_grade('BM') < 60:
             return False, f"BM: {row.get('BM', 'N/A')} (need ≥ C / 60)"
         if get_grade('BI') < 75:
-            return False, f"English: {row.get('BI', 'N/A')} (need ≥ B / 75)"
+            return False, f"English: {row.get('BI', 'N/A')} (need ≥ E / 40)"
         if get_grade('MAT') < 40:
-            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ E / 40)"
+            return False, f"Mathematics: {row.get('MAT', 'N/A')} (need ≥ C / 60)"
         if get_grade('SEJ') < 40:
             return False, f"History: {row.get('SEJ', 'N/A')} (need ≥ E / 40)"
 
@@ -433,6 +433,8 @@ def generate_explanation(row, program):
             reasons.append(f"ACC {row.get('ACC', '')} (≥C)")
         if get_grade('MAT') >= 40:
             reasons.append(f"Math {row.get('MAT', '')} (≥E)")
+        if get_grade('BI') >= 40:
+            reasons.append(f"English {row.get('BI', '')} (≥E)")
         if reasons:
             return "Eligible for Accounting Basic: " + ", ".join(reasons)
         return "Eligible for Accounting Basic"
