@@ -373,9 +373,9 @@ def calculate_detailed_score(row, program):
         if choice_number == 1:
             preference_bonus = 15
         elif choice_number == 2:
-            preference_bonus = 12
-        else:
             preference_bonus = 10
+        else:
+            preference_bonus = 5
     else:
         preference_bonus = 0
 
